@@ -1,4 +1,5 @@
 const axios = require('axios');
+const FormData = require('form-data');
 const UserDetails = require('../models/userdetails.model');
 const Transaction = require('../models/transaction.model');
 
@@ -11,7 +12,7 @@ class FormSubmissionService {
                 throw new Error('User details not found');
             }
 
-            // 2. Get transaction for form URL
+            // 2. Get form URL from transaction
             const transaction = await Transaction.findOne({ transactionId })
                 .populate('formDetails');
             
@@ -19,29 +20,28 @@ class FormSubmissionService {
                 throw new Error('Form URL not found');
             }
 
-            // 3. Prepare form data
-            const formData = {
-                firstName: userDetails.firstName,
-                lastName: userDetails.lastName,
-                dob: userDetails.dob,
-                gender: userDetails.gender,
-                pan: userDetails.pan,
-                contactNumber: userDetails.contactNumber,
-                personalemail: userDetails.email,
-                officialemail: userDetails.officialEmail,
-                employmentType: userDetails.employmentType,
-                endUse: userDetails.endUse,
-                income: userDetails.income,
-                companyName: userDetails.companyName,
-                udyamNumber: userDetails.udyamNumber,
-                addressL1: userDetails.address.line1,
-                addressL2: userDetails.address.line2,
-                city: userDetails.address.city,
-                state: userDetails.address.state,
-                pincode: userDetails.address.pincode,
-                aa_id: userDetails.aa_id,
-                bureauConsent: userDetails.bureauConsent
-            };
+            // 3. Create FormData
+            const formData = new FormData();
+            formData.append('firstName', userDetails.firstName);
+            formData.append('lastName', userDetails.lastName);
+            formData.append('email', userDetails.email);
+            formData.append('dob', userDetails.dob.toISOString().split('T')[0]);
+            formData.append('pan', userDetails.pan);
+            formData.append('contactNumber', userDetails.contactNumber);
+            formData.append('employmentType', userDetails.employmentType);
+            formData.append('income', userDetails.income);
+            formData.append('companyName', userDetails.companyName);
+            formData.append('officialemail', userDetails.officialEmail);
+            formData.append('gender', userDetails.gender);
+            formData.append('udyamNumber', userDetails.udyamNumber || '');
+            formData.append('addressL1', userDetails.address.line1);
+            formData.append('addressL2', userDetails.address.line2 || '');
+            formData.append('city', userDetails.address.city);
+            formData.append('state', userDetails.address.state);
+            formData.append('pincode', userDetails.address.pincode);
+            formData.append('aa_id', userDetails.aa_id || '');
+            formData.append('endUse', userDetails.endUse);
+            formData.append('bureauConsent', userDetails.bureauConsent ? 'true' : 'false');
 
             // 4. Submit form
             const response = await axios.post(
@@ -49,29 +49,32 @@ class FormSubmissionService {
                 formData,
                 {
                     headers: {
-                        'Content-Type': 'application/x-www-form-urlencoded'
+                        ...formData.getHeaders(),
+                        'Accept': 'application/json'
                     }
                 }
             );
 
-            console.log('Form submission response:', response.data);
-            
-
-            // 5. Update transaction with submission ID
+            // 5. Update transaction
             await Transaction.findByIdAndUpdate(transaction._id, {
                 status: 'FORM_SUBMITTED',
-                formSubmissionId: response.data.submission_id,
+                formSubmissionId: response.data.submissionId || response.data.id,
                 formSubmissionTimestamp: new Date()
             });
 
             return {
                 success: true,
-                submissionId: response.data.submissionId
+                submissionId: response.data.submissionId || response.data.id,
+                response: response.data
             };
 
         } catch (error) {
-            console.error('Form submission failed:', error);
-            throw error;
+            console.error('Form submission error:', {
+                message: error.message,
+                response: error.response?.data,
+                status: error.response?.status
+            });
+            throw new Error(`Form submission failed: ${error.message}`);
         }
     }
 }
