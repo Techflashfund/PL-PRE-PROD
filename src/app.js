@@ -16,6 +16,7 @@ app.use('/api/search', searchRoutes);
 app.use('/on_search', searchRoutes);
 
 // Connect to MongoDB
+console.log("Using MongoDB URI:", mongoURI); 
 mongoose.connect(mongoURI, {
     useNewUrlParser: true,
     useUnifiedTopology: true,
