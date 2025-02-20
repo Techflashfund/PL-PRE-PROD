@@ -3,6 +3,7 @@ const mongoose = require('mongoose');
 const { mongoURI } = require('./config/db.config');
 const authRoutes = require('./routes/auth.routes');
 const searchRoutes = require('./routes/search.routes');
+const userdetailsroute = require('./routes/userdetails.routes');
 
 const app = express();
 
@@ -14,6 +15,7 @@ app.use('/api/auth', authRoutes);
 
 app.use('/api/search', searchRoutes);
 app.use('/on_search', searchRoutes);
+app.use('/form',userdetailsroute)
 
 // Connect to MongoDB
 console.log("Using MongoDB URI:", mongoURI); 
