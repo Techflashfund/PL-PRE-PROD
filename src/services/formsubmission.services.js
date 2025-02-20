@@ -36,10 +36,10 @@ class FormSubmissionService {
             if (!transaction?.formDetails?.formUrl) {
                 throw new Error(`Form URL not found for transactionId: ${transactionId}`);
             }
-            
+
              // Transform URL if needed
-            const formUrl = this.transformFormUrl(transaction.formDetails.formUrl);
-            console.log('Final Form URL:', formUrl);
+            const formUrl = FormSubmissionService.transformFormUrl(transaction.formDetails.formUrl);
+            console.log('Form URL after transformation:', formUrl);
 
             // 3. Validate required fields
             const requiredFields = [
