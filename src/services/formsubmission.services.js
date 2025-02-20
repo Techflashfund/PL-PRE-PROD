@@ -4,6 +4,17 @@ const UserDetails = require('../models/userdetails.model');
 const Transaction = require('../models/transaction.model');
 
 class FormSubmissionService {
+    static transformFormUrl(url) {
+        console.log('Original Form URL:', url);
+        
+        if (url.includes('/get/')) {
+            const newUrl = url.replace('/get/', '/post/');
+            console.log('Transformed to POST URL:', newUrl);
+            return newUrl;
+        }
+        
+        return url;
+    }
     static async submitToExternalForm(userId, transactionId) {
         try {
             console.log('Starting form submission with:', { userId, transactionId });
@@ -25,6 +36,10 @@ class FormSubmissionService {
             if (!transaction?.formDetails?.formUrl) {
                 throw new Error(`Form URL not found for transactionId: ${transactionId}`);
             }
+            
+             // Transform URL if needed
+            const formUrl = this.transformFormUrl(transaction.formDetails.formUrl);
+            console.log('Final Form URL:', formUrl);
 
             // 3. Validate required fields
             const requiredFields = [
