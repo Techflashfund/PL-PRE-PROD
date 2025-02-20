@@ -2,7 +2,7 @@ const SearchService = require('../services/search.services');
 const Transaction = require('../models/transaction.model');
 const { generateSearchRequestBody } = require('../utils/search.request.utils');
 const { v4: uuidv4 } = require('uuid');
-const { searchRequest } = require('./lit.controllers');
+const { searchRequest } = require('../services/search.services');
 
 class SearchController {
     static async searchRequest(req, res) {
@@ -21,16 +21,18 @@ class SearchController {
             });
              console.log('hii');
 
-             const response = await searchRequest(requestBody,userId)
+
+            //  Gateway search request
+             const response = await searchRequest(requestBody)
              
-            // const response = await SearchService.makeSearchRequest(requestBody);
+            
             // Save transaction
-            // await Transaction.create({
-            //     transactionId,
-            //     messageId,
-            //     userId,
-            //     requestBody
-            // });
+            await Transaction.create({
+                transactionId,
+                messageId,
+                user:userId,
+                requestBody
+            });
             res.json(response);
 
         } catch (error) {
@@ -39,6 +41,9 @@ class SearchController {
         }
     }
     static async onSearch(req, res) {
+
+        console.log('Req Received');
+        
         try {
             const { context, message } = req.body;
             
@@ -56,8 +61,10 @@ class SearchController {
                         ondcResponse: req.body,
                         responseTimestamp: new Date()
                     }
-                }
+                },
+                { new: true } // ✅ Fix: Ensures it returns the updated document
             );
+            
 
             res.status(200).json({ message: 'Response processed successfully' });
         } catch (error) {

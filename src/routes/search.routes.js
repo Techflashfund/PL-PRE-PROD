@@ -8,7 +8,7 @@ const router = express.Router();
 router.post('/one', 
     authMiddleware,
     validateSearch,
-    SearchController.searchRequest  // Ensure this method exists and is exported
+    SearchController.searchRequest  
 );
 
 router.post('/', SearchController.onSearch);
