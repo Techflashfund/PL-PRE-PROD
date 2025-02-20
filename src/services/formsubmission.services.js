@@ -1,4 +1,3 @@
-const axios = require('axios');
 const FormData = require('form-data');
 const UserDetails = require('../models/userdetails.model');
 const Transaction = require('../models/transaction.model');
@@ -6,44 +5,70 @@ const Transaction = require('../models/transaction.model');
 class FormSubmissionService {
     static async submitToExternalForm(userId, transactionId) {
         try {
-            // 1. Get user details
+            console.log('Starting form submission with:', { userId, transactionId });
+
+            // 1. Get user details with logging
             const userDetails = await UserDetails.findOne({ user: userId });
+            console.log('User Details found:', userDetails ? 'Yes' : 'No');
+            
             if (!userDetails) {
-                throw new Error('User details not found');
+                throw new Error(`User details not found for userId: ${userId}`);
             }
 
-            // 2. Get form URL from transaction
+            // 2. Get transaction with logging
             const transaction = await Transaction.findOne({ transactionId })
                 .populate('formDetails');
-            
+            console.log('Transaction found:', transaction ? 'Yes' : 'No');
+            console.log('Form Details:', transaction?.formDetails);
+
             if (!transaction?.formDetails?.formUrl) {
-                throw new Error('Form URL not found');
+                throw new Error(`Form URL not found for transactionId: ${transactionId}`);
             }
 
-            // 3. Create FormData
-            const formData = new FormData();
-            formData.append('firstName', userDetails.firstName);
-            formData.append('lastName', userDetails.lastName);
-            formData.append('email', userDetails.email);
-            formData.append('dob', userDetails.dob.toISOString().split('T')[0]);
-            formData.append('pan', userDetails.pan);
-            formData.append('contactNumber', userDetails.contactNumber);
-            formData.append('employmentType', userDetails.employmentType);
-            formData.append('income', userDetails.income);
-            formData.append('companyName', userDetails.companyName);
-            formData.append('officialemail', userDetails.officialEmail);
-            formData.append('gender', userDetails.gender);
-            formData.append('udyamNumber', userDetails.udyamNumber || '');
-            formData.append('addressL1', userDetails.address.line1);
-            formData.append('addressL2', userDetails.address.line2 || '');
-            formData.append('city', userDetails.address.city);
-            formData.append('state', userDetails.address.state);
-            formData.append('pincode', userDetails.address.pincode);
-            formData.append('aa_id', userDetails.aa_id || '');
-            formData.append('endUse', userDetails.endUse);
-            formData.append('bureauConsent', userDetails.bureauConsent ? 'true' : 'false');
+            // 3. Validate required fields
+            const requiredFields = [
+                'firstName', 'lastName', 'email', 'dob', 'pan', 
+                'contactNumber', 'employmentType'
+            ];
 
-            // 4. Submit form
+            const missingFields = requiredFields.filter(field => !userDetails[field]);
+            if (missingFields.length > 0) {
+                throw new Error(`Missing required fields: ${missingFields.join(', ')}`);
+            }
+
+            // 4. Create FormData with validation
+            const formData = new FormData();
+            Object.entries({
+                firstName: userDetails.firstName,
+                lastName: userDetails.lastName,
+                email: userDetails.email,
+                dob: userDetails.dob?.toISOString().split('T')[0],
+                pan: userDetails.pan,
+                contactNumber: userDetails.contactNumber,
+                employmentType: userDetails.employmentType,
+                income: userDetails.income,
+                companyName: userDetails.companyName,
+                officialemail: userDetails.officialEmail || '',
+                gender: userDetails.gender,
+                udyamNumber: userDetails.udyamNumber || '',
+                addressL1: userDetails.address?.line1 || '',
+                addressL2: userDetails.address?.line2 || '',
+                city: userDetails.address?.city || '',
+                state: userDetails.address?.state || '',
+                pincode: userDetails.address?.pincode || '',
+                aa_id: userDetails.aa_id || '',
+                endUse: userDetails.endUse || 'other',
+                bureauConsent: userDetails.bureauConsent ? 'true' : 'false'
+            }).forEach(([key, value]) => {
+                if (value !== undefined && value !== null) {
+                    formData.append(key, value);
+                }
+                console.log(`Appending ${key}:`, value);
+            });
+
+            console.log('Form URL:', transaction.formDetails.formUrl);
+
+            // 5. Submit form
             const response = await axios.post(
                 transaction.formDetails.formUrl,
                 formData,
@@ -55,26 +80,25 @@ class FormSubmissionService {
                 }
             );
 
-            // 5. Update transaction
-            await Transaction.findByIdAndUpdate(transaction._id, {
-                status: 'FORM_SUBMITTED',
-                formSubmissionId: response.data.submissionId || response.data.id,
-                formSubmissionTimestamp: new Date()
-            });
+            console.log('Form submission response:', response.data);
 
             return {
                 success: true,
+                formUrl: transaction.formDetails.formUrl,
                 submissionId: response.data.submissionId || response.data.id,
                 response: response.data
             };
 
         } catch (error) {
-            console.error('Form submission error:', {
-                message: error.message,
+            console.error('Form Submission Error:', {
+                error: error.message,
+                stack: error.stack,
+                userData: userId,
+                transactionId: transactionId,
                 response: error.response?.data,
                 status: error.response?.status
             });
-            throw new Error(`Form submission failed: ${error.message}`);
+            throw error;
         }
     }
 }
