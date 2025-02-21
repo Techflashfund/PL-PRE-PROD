@@ -44,6 +44,10 @@ class SearchController {
         }
     }
     static async onSearch(req, res) {
+        const version = req.body.context?.version;
+  if (version !== "2.0.0") {
+    return res.status(400).json({ error: "Unsupported version" });}
+
         console.log('ONDC Response Received');
         
         try {
@@ -125,6 +129,7 @@ class SearchController {
                     }
                 }
             );
+console.log('efwegewgfwEFEWFEWF');
 
             const  selectPayload =await SelectRequestHandler.createSelectonePayload(req.body, submissionId);
             const selectResponse=await SelectRequestHandler.makeSelectRequest(selectPayload)
