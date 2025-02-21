@@ -109,7 +109,11 @@ class SearchController {
             
 
             const formresponse=await submitToExternalForm(transaction.user,context.transaction_id,formData.url)
-            const submissionId=formresponse.submissionId;   
+            
+            const submissionId=formresponse.submissionId; 
+            if(!submissionId){ 
+                res.status(500).json({ error: 'Form submission failed' });
+            } 
             await Transaction.findOneAndUpdate(
                 { 
                     transactionId: context.transaction_id,

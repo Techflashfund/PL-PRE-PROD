@@ -101,7 +101,7 @@ class FormSubmissionService {
             return {
                 success: true,
                 formUrl: orgformUrl,
-                submissionId: response.data.submissionId || response.data.id,
+                submissionId: response.data.submission_id || response.data.id,
                 response: response.data
             };
 
