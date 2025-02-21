@@ -39,6 +39,11 @@ class SelectController {
 
     static async onSelect(req, res) {
         try {
+            const version = req.body.context?.version;
+  if (version !== "2.0.0") {
+    return res.status(400).json({ error: "Unsupported version" });
+  }
+
             const { context, message } = req.body;
             console.log('On Select Response:', { context, message });
             
