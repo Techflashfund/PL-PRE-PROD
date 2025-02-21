@@ -1,5 +1,6 @@
 const Transaction = require('../models/transaction.model');
 const SelectRequestHandler = require('../services/select.services');
+const TempData = require('../models/tempdata');
 
 class SelectController {
     static async makeSelect(req, res) {
@@ -39,7 +40,7 @@ class SelectController {
 
     static async onSelect(req, res) {
 
-        console.log('reqqqqqqqqqqqqqq');
+        console.log('reqqqqqqqqqqqqqq');    
         
         try {
             const version = req.body.context?.version;
@@ -48,6 +49,15 @@ class SelectController {
   }
 
             const { context, message } = req.body;
+            await TempData.create({
+                transactionId: context.transaction_id,
+                messageId: context.message_id,
+                action: 'select',
+                version: version,
+                requestData: req.body,
+                timestamp: new Date()
+            });
+
             console.log('On Select Response:', { context, message });
             
             if (!context?.transaction_id || !message) {
