@@ -22,7 +22,7 @@ const transactionSchema = new mongoose.Schema({
     },
     status: {
         type: String,
-        enum: ['PENDING', 'COMPLETED', 'FAILED','FORM_SUBMITTED'],
+        enum: ['PENDING', 'COMPLETED', 'FAILED','FORM_SUBMITTED','SELECTONE_INITIATED','SELECTONE_COMPLETED'],
         default: 'PENDING'
     },
     formDetails: {
@@ -30,7 +30,36 @@ const transactionSchema = new mongoose.Schema({
         ref: 'FormDetails'
     },
     requestBody: Object,
-    ondcResponse: Object
+
+    ondcSearchResponses: [{
+        response: Object,
+        providerId: String,
+        providerName: String,
+        formDetails: {
+            type: mongoose.Schema.Types.ObjectId,
+            ref: 'FormDetails'
+        },
+        formSubmissionId: String,
+        responseTimestamp: {
+            type: Date,
+            default: Date.now
+        }
+    }],
+    selectoneResponse:[{
+        providerId: String,
+        payload: Object,
+        response: Object,
+        reqresponse: Object,
+        status: {
+            type: String,
+            enum: ['INITIATED', 'COMPLETED', 'FAILED'],
+            default: 'INITIATED'
+        },
+        requestTimestamp: Date,
+        responseTimestamp: Date
+    }],
+    selectonepayloadres:Object,
+    selectoneResponse:Object
 }, {
     timestamps: true
 });

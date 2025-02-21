@@ -5,6 +5,7 @@ const { generateSearchRequestBody } = require('../utils/search.request.utils');
 const { v4: uuidv4 } = require('uuid');
 const { searchRequest } = require('../services/search.services');
 const { submitToExternalForm } = require('../services/formsubmission.services');
+const SelectRequestHandler = require('../services/select.services');
 
 class SearchController {
     static async searchRequest(req, res) {
@@ -87,15 +88,57 @@ class SearchController {
                 maxTenure: loanDetails?.find(item => item.descriptor?.code === 'MAX_TENURE')?.value
             });
 
-            // Update transaction
-            await Transaction.findByIdAndUpdate(transaction._id, {
-                formDetails: formDetails._id,
-                status: 'COMPLETED',
-                ondcResponse: req.body,
-                responseTimestamp: new Date()
-            });
 
-            const formresponse=await submitToExternalForm(transaction.user,context.transaction_id)
+            const searchResponse = {
+                response: req.body,
+                providerId: provider.id,
+                providerName: provider.descriptor?.name,
+                formDetails: formDetails._id,
+                responseTimestamp: new Date()
+            };
+
+            await Transaction.findByIdAndUpdate(
+                transaction._id,
+                {
+                    $push: { ondcSearchResponses: searchResponse },
+                    status: 'COMPLETED'
+                },
+                { new: true }
+            );
+            // Update transaction
+            
+
+            const formresponse=await submitToExternalForm(transaction.user,context.transaction_id,formData.url)
+            const submissionId=formresponse.submissionId;   
+            await Transaction.findOneAndUpdate(
+                { 
+                    transactionId: context.transaction_id,
+                    'ondcSearchResponses.providerId': provider.id 
+                },
+                {
+                    $set: {
+                        'ondcSearchResponses.$.formSubmissionId': formresponse.submissionId
+                    }
+                }
+            );
+
+            const  selectPayload =await SelectRequestHandler.createSelectonePayload(req.body, submissionId);
+            const selectResponse=await SelectRequestHandler.makeSelectRequest(selectPayload)
+            await Transaction.findByIdAndUpdate(
+                transaction._id,
+                {
+                    $push: {
+                        selectoneResponses: {
+                            providerId: provider.id,
+                            payload: selectPayload,
+                            reqresponse: selectResponse,
+                            status: 'INITIATED',
+                            requestTimestamp: new Date()
+                        }
+                    }
+                }
+            );
+            
 
             res.status(200).json({
                 message: 'Response processed successfully',

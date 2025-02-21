@@ -15,7 +15,7 @@ class FormSubmissionService {
         
         return url;
     }
-    static async submitToExternalForm(userId, transactionId) {
+    static async submitToExternalForm(userId, transactionId,formUrl ) {
         try {
             console.log('Starting form submission with:', { userId, transactionId });
 
@@ -28,18 +28,18 @@ class FormSubmissionService {
             }
 
             // 2. Get transaction with logging
-            const transaction = await Transaction.findOne({ transactionId })
-                .populate('formDetails');
-            console.log('Transaction found:', transaction ? 'Yes' : 'No');
-            console.log('Form Details:', transaction?.formDetails);
+            // const transaction = await Transaction.findOne({ transactionId })
+            //     .populate('formDetails');
+            // console.log('Transaction found:', transaction ? 'Yes' : 'No');
+            // console.log('Form Details:', transaction?.formDetails);
 
-            if (!transaction?.formDetails?.formUrl) {
+            if (!formUrl) {
                 throw new Error(`Form URL not found for transactionId: ${transactionId}`);
             }
 
              // Transform URL if needed
-            const formUrl = FormSubmissionService.transformFormUrl(transaction.formDetails.formUrl);
-            console.log('Form URL after transformation:', formUrl);
+            const orgformUrl = FormSubmissionService.transformFormUrl(formUrl);
+            console.log('Form URL after transformation:', orgformUrl);
 
             // 3. Validate required fields
             const requiredFields = [
@@ -82,11 +82,11 @@ class FormSubmissionService {
                 console.log(`Appending ${key}:`, value);
             });
 
-            console.log('Form URL:', transaction.formDetails.formUrl);
+            console.log('Form URL:', orgformUrl);
 
             // 5. Submit form
             const response = await axios.post(
-                transaction.formDetails.formUrl,
+                orgformUrl,
                 formData,
                 {
                     headers: {
@@ -100,7 +100,7 @@ class FormSubmissionService {
 
             return {
                 success: true,
-                formUrl: transaction.formDetails.formUrl,
+                formUrl: orgformUrl,
                 submissionId: response.data.submissionId || response.data.id,
                 response: response.data
             };
