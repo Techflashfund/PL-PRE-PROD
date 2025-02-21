@@ -38,6 +38,9 @@ class SelectController {
     }
 
     static async onSelect(req, res) {
+
+        console.log('reqqqqqqqqqqqqqq');
+        
         try {
             const version = req.body.context?.version;
   if (version !== "2.0.0") {
@@ -53,7 +56,7 @@ class SelectController {
 
             const transaction = await Transaction.findOne({ 
                 transactionId: context.transaction_id,
-                'selectResponses.providerId': message.order.provider.id 
+                'selectoneResponse.providerId': message.order.provider.id 
             });
 
             if (!transaction) {
@@ -64,13 +67,13 @@ class SelectController {
             await Transaction.findOneAndUpdate(
                 { 
                     transactionId: context.transaction_id,
-                    'selectResponses.providerId': message.order.provider.id
+                    'selectoneResponse.providerId': message.order.provider.id
                 },
                 {
                     $set: {
-                        'selectoneResponses.$.response': req.body,
-                        'selectoneResponses.$.status': 'COMPLETED',
-                        'selectoneResponses.$.responseTimestamp': new Date(),
+                        'selectoneResponse.$.response': req.body,
+                        'selectoneResponse.$.status': 'COMPLETED',
+                        'selectoneResponse.$.responseTimestamp': new Date(),
                         status: 'SELECTONE_COMPLETED'
                     }
                 }
