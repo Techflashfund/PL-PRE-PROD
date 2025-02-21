@@ -1,56 +1,41 @@
-const SearchService = require('../services/search.services');
-const Transaction = require('../models/transaction.model');
-const FormDetails = require('../models/formdetails.model');
-const { generateSearchRequestBody } = require('../utils/search.request.utils');
-const { v4: uuidv4 } = require('uuid');
-const { searchRequest } = require('../services/search.services');
-const { submitToExternalForm } = require('../services/formsubmission.services');
-const SelectRequestHandler = require('../services/select.services');
-
 class SearchController {
     static async searchRequest(req, res) {
         try {
             const { userId } = req.body;
-
             const transactionId = uuidv4();
             const messageId = uuidv4();
-
-           
             
-
             const requestBody = generateSearchRequestBody({
                 transactionId,
                 messageId
             });
-             console.log('hii');
-
-
-            //  Gateway search request
-             const response = await searchRequest(requestBody)
-             
             
-            // Save transaction
+            const response = await searchRequest(requestBody)
+            
             await Transaction.create({
                 transactionId,
                 messageId,
-                user:userId,
+                user: userId,
                 requestBody
             });
+            
             res.json(response);
-
         } catch (error) {
             console.error('Search request failed:', error);
-            res.status(500).json({ error: error});
+            res.status(500).json({ error: error });
         }
     }
-    static async onSearch(req, res) {
-        const version = req.body.context?.version;
-  if (version !== "2.0.0") {
-    return res.status(400).json({ error: "Unsupported version" });}
 
-        console.log('ONDC Response Received');
-        
+    static async onSearch(req, res) {
         try {
+            // Version check
+            const version = req.body.context?.version;
+            if (version !== "2.0.0") {
+                return res.status(400).json({ error: "Unsupported version" });
+            }
+
+            console.log('ONDC Response Received');
+            
             const { context, message } = req.body;
             
             if (!context?.transaction_id || !message?.catalog?.providers?.[0]) {
@@ -92,7 +77,6 @@ class SearchController {
                 maxTenure: loanDetails?.find(item => item.descriptor?.code === 'MAX_TENURE')?.value
             });
 
-
             const searchResponse = {
                 response: req.body,
                 providerId: provider.id,
@@ -109,15 +93,13 @@ class SearchController {
                 },
                 { new: true }
             );
-            // Update transaction
-            
 
-            const formresponse=await submitToExternalForm(transaction.user,context.transaction_id,formData.url)
+            const formresponse = await submitToExternalForm(transaction.user, context.transaction_id, formData.url);
             
-            const submissionId=formresponse.submissionId; 
-            if(!submissionId){ 
-                res.status(500).json({ error: 'Form submission failed' });
-            } 
+            if (!formresponse.submissionId) {
+                return res.status(500).json({ error: 'Form submission failed' });
+            }
+
             await Transaction.findOneAndUpdate(
                 { 
                     transactionId: context.transaction_id,
@@ -129,10 +111,10 @@ class SearchController {
                     }
                 }
             );
-console.log('efwegewgfwEFEWFEWF');
 
-            const  selectPayload =await SelectRequestHandler.createSelectonePayload(req.body, submissionId);
-            const selectResponse=await SelectRequestHandler.makeSelectRequest(selectPayload)
+            const selectPayload = await SelectRequestHandler.createSelectonePayload(req.body, formresponse.submissionId);
+            const selectResponse = await SelectRequestHandler.makeSelectRequest(selectPayload);
+            
             await Transaction.findByIdAndUpdate(
                 transaction._id,
                 {
@@ -147,18 +129,17 @@ console.log('efwegewgfwEFEWFEWF');
                     }
                 }
             );
-            
 
-            res.status(200).json({
+            return res.status(200).json({
                 message: 'Response processed successfully',
                 formresponse
             });
 
         } catch (error) {
             console.error('Search response processing failed:', error);
-            res.status(500).json({ error: error.message });
+            return res.status(500).json({ error: error.message });
         }
-       }
+    }
 }
 
 module.exports = SearchController;
