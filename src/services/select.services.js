@@ -89,7 +89,7 @@ class SelectRequestHandler {
             const { authHeader } = this.generateAuthHeader(base64HashedBody);
 
             const response = await axios.post(
-                `${ondcResponse.context.bpp_uri}/select`,
+                `${selectPayload.context.bpp_uri}/select`,
                 selectPayload,
                 {
                     headers: {
