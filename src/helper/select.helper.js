@@ -9,6 +9,7 @@ const { selectRequest } = require("../services/select.services");
     console.log('payyload',payload.message,payload.context.bpp_id);
     const formDetails = payload.message?.order?.items?.[0]?.xinput;
     
+    console.log('formDetails',formDetails);
     
     
     // Check for form details in items array
