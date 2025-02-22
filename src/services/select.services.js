@@ -54,7 +54,7 @@ class SelectRequestHandler {
     if (!requestBody ) {
       throw new Error("Missing required parameters: requestBody or userId");
     }
-
+    
     try {
       // Validate context properties
       if (

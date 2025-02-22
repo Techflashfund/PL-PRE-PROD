@@ -2,6 +2,7 @@ const Transaction = require("../models/transaction.model");
 const SelectRequestHandler = require("../services/select.services");
 const SelectOne = require("../models/selectone.nodel");
 const SelectHelper = require("../helper/select.helper");
+const TempData = require("../models/tempdata");
 
 class SelectController {
   static async makeSelect(req, res) {
@@ -43,6 +44,9 @@ class SelectController {
 
   static async onSelect(req, res) {
     try {
+        const TempData = new TemppData({
+            responseData: req.body
+        });
       const { context, message } = req.body;
       
 
