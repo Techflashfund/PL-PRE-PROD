@@ -4,7 +4,7 @@ const Transaction = require("../models/transaction.model");
 const SelectPayloadHandler = require("../utils/select.request.utils");
 const { selectRequest } = require("../services/select.services");
  class Selecthepler{
-    static async getPayloadType(payload){
+    static  getPayloadType(payload){
  
     console.log('payyload',payload.message,payload.context.bpp_id);
     const formDetails = payload.message?.order?.items?.[0]?.xinput;
