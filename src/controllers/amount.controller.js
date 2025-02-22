@@ -63,7 +63,7 @@ class AmountController {
             submissionId
         });
 
-        const selectPayload = SelectPayloadHandler.createSelecthreePayload(selectTwo, submissionId);
+        const selectPayload =await SelectPayloadHandler.createSelecthreePayload(selectTwo, submissionId);
         const selectResponse = await selectRequest(selectPayload);
         
         await SelectThree.create({
