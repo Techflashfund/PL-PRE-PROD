@@ -10,6 +10,7 @@ const selectTwoSchema = new mongoose.Schema({
     selectResponse: Object,
     onselectRequest: Object,
     amountformurl: String,
+    formId: String,
     status: {
         type: String,
         enum: ['INITIATED', 'COMPLETED', 'FAILED'],
@@ -56,4 +57,4 @@ const selectTwoSchema = new mongoose.Schema({
     timestamps: true
 });
 
-module.exports = mongoose.model('SelectTwo', selectTwoSchema);
+module.exports = mongoose.models.SelectTwo || mongoose.model('SelectTwo', selectTwoSchema);

@@ -107,6 +107,7 @@ const { selectRequest } = require("../services/select.services");
                 $set: {
                     onselectRequest: payload,
                     amountformurl: formDetails.form.url,
+                    formId: formDetails.form.id,
                     status: "COMPLETED",
                     responseTimestamp: new Date(),
                     loanOffer: {
