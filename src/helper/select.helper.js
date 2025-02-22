@@ -1,6 +1,7 @@
 const Transaction = require("../models/transaction.model");
  const SelectOne = require("../models/selectone.nodel");
  const SelectTwo=require("../models/selecttwo.model");
+ const SelectThree = require('../models/selectThree.model');
 const SelectPayloadHandler = require("../utils/select.request.utils");
 const { selectRequest } = require("../services/select.services");
  class Selecthepler{
@@ -164,10 +165,42 @@ const { selectRequest } = require("../services/select.services");
     }
 }
 static async handleOnselectKYC(payload) {
-    return null
-
+    try {
+        const formDetails = payload.message?.order?.items?.[0]?.xinput;
+    if (!formDetails) {
+        throw new Error('Form details not found in KYC response');
+    }
+    const selectThree = await SelectThree.findOneAndUpdate(
+        {
+            transactionId: payload.context.transaction_id,
+            providerId: payload.message.order.provider.id
+        },
+        {
+            $set: {
+                onselectRequest: payload,
+                kycformurl: formDetails.form.url,
+                formId: formDetails.form.id,
+                status: 'COMPLETED',
+                responseTimestamp: new Date()
+            }
+        },
+        { new: true }
+    );
+    await Transaction.findOneAndUpdate(
+        { transactionId: payload.context.transaction_id },
+        { status: 'SELECTHREE_COMPLETED' }
+    );
+    return selectThree;
+        
+    } catch (error) {
+        console.error('Handle onselect KYC failed:', error);
+        throw error;
+    }
+        
+    }
+    
 
 }
 
-}
+
 module.exports = Selecthepler;

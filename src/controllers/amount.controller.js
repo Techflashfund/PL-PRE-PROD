@@ -1,6 +1,12 @@
 const mongoose = require('mongoose');
 const SelectTwo = mongoose.model('SelectTwo');
+const SelectedLoan = require('../models/selectedLoan.model');
+const SelectPayloadHandler = require('../utils/select.request.utils');
+const SelectThree = require('../models/selectThree.model');
 const FormSubmissionServicetwo = require('../services/formsubmissiontwo.services');
+const Transaction = require('../models/transaction.model');
+const { selectRequest } = require('../services/select.services');
+
 
 class AmountController {
     static async submitAmount(req, res) {
@@ -47,11 +53,40 @@ class AmountController {
                     transactionId
                 }
             );
+           const  submissionId = formResponse.submission_id;
+           const selectedLoan = await SelectedLoan.create({
+            transactionId,
+            requestedAmount: amount,
+            sanctionedAmount: selectTwo.loanOffer.amount.value,
+            lenderId: selectTwo.onselectRequest.message.order.provider.id,
+            lenderName: selectTwo.onselectRequest.message.order.provider.descriptor.name,
+            submissionId
+        });
 
-            return res.status(200).json({
-                message: 'Amount submitted successfully',
-                formResponse
-            });
+        const selectPayload = SelectPayloadHandler.createSelecthreePayload(selectTwo, submissionId);
+        const selectResponse = await selectRequest(selectPayload);
+        
+        await SelectThree.create({
+            transactionId,
+            providerId: selectTwo.onselectRequest.message.order.provider.id,
+            selectPayload,
+            selectResponse,
+            status: 'INITIATED',
+            submissionId,
+            requestedAmount: amount,
+            responseTimestamp: new Date()
+        });
+
+        // Update transaction status
+        await Transaction.findOneAndUpdate(
+            { transactionId },
+            { status: 'SELECTHREE_INITIATED' }
+        );
+        return res.status(200).json({
+            message: 'Amount submitted successfully',
+            formResponse,
+            selectedLoan
+        });
 
         } catch (error) {
             console.error('Amount submission failed:', error);

@@ -82,6 +82,49 @@ static async createSelecttwoPayload(payload) {
     console.log('SelectTWo Payload Created:', JSON.stringify(selectPayload, null, 2));
     return selectPayload;
 }
+
+static async createSelecthreePayload(selectTwo, submissionId){
+    return {
+        context: {
+            domain: "ONDC:FIS12",
+            location: {
+                country: { code: "IND" },
+                city: { code: "*" }
+            },
+            transaction_id: selectTwo.transactionId,
+            message_id: uuidv4(),
+            action: "select",
+            timestamp: new Date().toISOString(),
+            version: "2.0.0",
+            bap_uri: selectTwo.onselectRequest.context.bap_uri,
+            bap_id: selectTwo.onselectRequest.context.bap_id,
+            ttl: "PT10M",
+            bpp_id: selectTwo.onselectRequest.context.bpp_id,
+            bpp_uri: selectTwo.onselectRequest.context.bpp_uri
+        },
+        message: {
+            order: {
+                provider: {
+                    id: selectTwo.onselectRequest.message.order.provider.id
+                },
+                items: [
+                    {
+                        id: selectTwo.onselectRequest.message.order.items[0].id,
+                        xinput: {
+                            form: {
+                                id: selectTwo.formId
+                            },
+                            form_response: {
+                                status: "SUCCESS",
+                                submission_id: submissionId
+                            }
+                        }
+                    }
+                ]
+            }
+        }
+    };
+}
 }
 
 module.exports = SelectPayloadHandler;
