@@ -44,22 +44,8 @@ const transactionSchema = new mongoose.Schema({
             type: Date,
             default: Date.now
         }
-    }],
-    selectoneResponse:[{
-        providerId: String,
-        payload: Object,
-        response: Object,
-        reqresponse: Object,
-        status: {
-            type: String,
-            enum: ['INITIATED', 'COMPLETED', 'FAILED'],
-            default: 'INITIATED'
-        },
-        requestTimestamp: Date,
-        responseTimestamp: Date
-    }],
-    selectonepayloadres:Object,
-    selectoneResponse:Object
+    }]
+    
 }, {
     timestamps: true
 });
