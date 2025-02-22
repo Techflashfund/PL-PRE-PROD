@@ -71,7 +71,7 @@ class SelectController {
           break;
 
         case "KYC":
-          result = await handleOnselectKYC(req.body);
+          result = await SelectHelper.handleOnselectKYC(req.body);
           break;
 
         default:

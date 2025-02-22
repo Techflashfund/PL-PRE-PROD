@@ -160,6 +160,11 @@ const { selectRequest } = require("../services/select.services");
         throw error;
     }
 }
+static async handleOnselectKYC(payload) {
+    return null
+
+
+}
 
 }
 module.exports = Selecthepler;
