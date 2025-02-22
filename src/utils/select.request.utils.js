@@ -34,6 +34,54 @@ static async createSelectonePayload(ondcResponse, formSubmissionId) {
     console.log('Select Payload Created:', JSON.stringify(selectPayload, null, 2));
     return selectPayload;
 }
+
+static async createSelecttwoPayload(payload) {
+    const context = payload.context;
+    const providerId = payload.message?.order?.provider?.id;
+    const itemId = payload.message?.order?.items?.[0]?.id;
+    const formId = payload.message?.order?.items?.[0]?.xinput?.form?.id;
+    const submissionId = payload.message?.order?.items?.[0]?.xinput?.form_response?.submission_id;
+
+    // Create new timestamp
+    const newTimestamp = new Date().toISOString();
+    
+    // Create new message ID
+    const newMessageId = uuidv4();
+
+    // Construct new payload
+    const selectPayload = {
+        context: {
+            ...context,  // Spread existing context values
+            action: "select", // Override action
+            timestamp: newTimestamp,
+            message_id: newMessageId,
+            ttl: "PT10M"  // Override TTL as specified
+        },
+        message: {
+            order: {
+                provider: {
+                    id: providerId
+                },
+                items: [
+                    {
+                        id: itemId,
+                        xinput: {
+                            form: {
+                                id: formId
+                            },
+                            form_response: {
+                                status: "APPROVED",
+                                submission_id: submissionId
+                            }
+                        }
+                    }
+                ]
+            }
+        }
+    };
+    console.log('SelectTWo Payload Created:', JSON.stringify(selectPayload, null, 2));
+    return selectPayload;
+}
 }
 
 module.exports = SelectPayloadHandler;

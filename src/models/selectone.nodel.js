@@ -8,6 +8,7 @@ const selectOneSchema = new mongoose.Schema({
     providerId: String,
     selectPayload: Object,
     selectResponse: Object,
+    onselectRequest: Object,
     status: {
         type: String,
         enum: ['INITIATED', 'COMPLETED', 'FAILED'],
