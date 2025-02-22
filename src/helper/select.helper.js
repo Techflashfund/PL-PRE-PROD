@@ -18,6 +18,7 @@ const { selectRequest } = require("../services/select.services");
     if (!formDetails) {
       return null;
     }
+  console.log('yoooobroo',formDetails.form_response?.status);
   
     // Check for initial form (type 1)
     if (
