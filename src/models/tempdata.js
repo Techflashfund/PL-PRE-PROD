@@ -5,11 +5,9 @@ const tempDataSchema = new mongoose.Schema({
     messageId: String,
     action: {
         type: String,
-        enum: ['search', 'select', 'init', 'confirm'],
-        required: true
+        default: 'on_select'
     },
-    version: String,
-    requestData: Object,
+    payloadType: String,
     responseData: Object,
     timestamp: {
         type: Date,
