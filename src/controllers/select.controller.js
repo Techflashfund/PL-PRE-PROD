@@ -44,7 +44,7 @@ class SelectController {
 
   static async onSelect(req, res) {
     try {
-        const TempData = new TemppData({
+        const tempData = new TempData({
             responseData: req.body
         });
       const { context, message } = req.body;
