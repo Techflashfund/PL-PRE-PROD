@@ -61,7 +61,8 @@ class SelectController {
           .json({ error: "Invalid select response format" });
       }
       const payloadType = SelectHelper.getPayloadType(req.body);
-
+       console.log('Payload Type:', payloadType);
+       
       if (!payloadType) {
         console.log("no payload ");
 
