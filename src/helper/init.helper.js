@@ -98,12 +98,13 @@ class InitHelper {
         bankDetailsSubmissionId: submissionId,
         responseTimestamp: new Date(),
       });
-
+      console.log('----------------------------------------------');
+      
       await Transaction.findOneAndUpdate(
         { transactionId: initone.transactionId },
         { status: "INITTWO_INITIATED" }
       );
-
+      console.log('++++++++++++++++++++++++++++++++++++++++++');
       return submissionId;
     } catch (error) {
       console.error("Error in handleTypeOne:", error);
