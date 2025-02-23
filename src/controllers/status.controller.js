@@ -28,8 +28,8 @@ class StatusController {
 
                 // If KYC approved, make init call
                 if (formResponse.status === 'APPROVED') {
-                    const initPayload = await InitRequestUtils.createInitOnePayload(selectThree);
-                    await InitService.makeInitRequest(initPayload);
+                    const initPayload = await InitRequestUtils.createInitOnePayload(selectThree,formResponse.submission_id);
+                    const initResponse=await InitService.makeInitRequest(initPayload);
                     await InitOne.create({
                         transactionId: context.transaction_id,
                         providerId: message.order.provider.id,

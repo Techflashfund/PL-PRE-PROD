@@ -1,7 +1,7 @@
 const { v4: uuidv4 } = require('uuid');
 
 class InitRequestUtils {
-    static async createInitOnePayload(selectThree) {
+    static async createInitOnePayload(selectThree,kycSubmissionId) {
         return {
             context: {
                 domain: "ONDC:FIS12",
@@ -34,7 +34,7 @@ class InitRequestUtils {
                                 },
                                 form_response: {
                                     status: "SUCCESS",
-                                    submission_id: selectThree.kycSubmissionId
+                                    submission_id: kycSubmissionId
                                 }
                             }
                         }
