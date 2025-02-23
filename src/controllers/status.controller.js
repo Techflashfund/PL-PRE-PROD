@@ -3,6 +3,7 @@ const InitService = require('../services/init.services');
 const InitRequestUtils = require('../utils/init.request.utils');
 const InitOne = require('../models/initone.model');
 const Transaction = require('../models/transaction.model');
+const Status=require('../models/status.model');
 class StatusController {
     static async onStatus(req, res) {
         try {
