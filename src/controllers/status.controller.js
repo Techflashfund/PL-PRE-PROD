@@ -8,6 +8,7 @@ class StatusController {
     static async onStatus(req, res) {
         try {
             const { context, message } = req.body;
+            const { order } = message;
             const formId = message.order.items[0].xinput.form.id;
             const formResponse = message.order.items[0].xinput.form_response;
 
@@ -51,24 +52,26 @@ class StatusController {
             // Save status response
             await Status.create({
                 transactionId: context.transaction_id,
-                providerId: message.order.provider.id,
+                providerId: order.provider.id,
                 bppId: context.bpp_id,
-                formId: formId,
-                formResponse: formResponse,
+                formId: order.items[0].xinput.form.id,
+                formResponse: order.items[0].xinput.form_response,
                 loanDetails: {
-                    amount: message.order.items[0].price.value,
-                    term: message.order.items[0].tags[0].list.find(i => i.descriptor.code === 'TERM')?.value,
-                    interestRate: message.order.items[0].tags[0].list.find(i => i.descriptor.code === 'INTEREST_RATE')?.value,
-                    installmentAmount: message.order.items[0].tags[0].list.find(i => i.descriptor.code === 'INSTALLMENT_AMOUNT')?.value
+                    amount: order.items[0].price?.value,
+                    term: order.items[0]?.tags?.[0]?.list?.find(i => i.descriptor?.code === 'TERM')?.value,
+                    interestRate: order.items[0]?.tags?.[0]?.list?.find(i => i.descriptor?.code === 'INTEREST_RATE')?.value,
+                    installmentAmount: order.items[0]?.tags?.[0]?.list?.find(i => i.descriptor?.code === 'INSTALLMENT_AMOUNT')?.value
                 },
-                paymentSchedule: message.order.payments
-                    .filter(p => p.type === 'POST_FULFILLMENT')
-                    .map(p => ({
-                        installmentId: p.id,
-                        amount: p.params.amount,
-                        dueDate: p.time.range.end,
-                        status: p.status
-                    })),
+                paymentSchedule: order.payments && Array.isArray(order.payments) 
+                    ? order.payments
+                        .filter(p => p && p.type === 'POST_FULFILLMENT')
+                        .map(p => ({
+                            installmentId: p.id,
+                            amount: p.params?.amount,
+                            dueDate: p.time?.range?.end,
+                            status: p.status
+                        }))
+                    : [],
                 statusResponse: req.body
             });
 
