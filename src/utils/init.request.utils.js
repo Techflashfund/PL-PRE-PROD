@@ -116,7 +116,7 @@ class InitRequestUtils {
         };
     }
 
-    static async createInitTwoPayload(initOne, bankDetailsSubmissionId) {
+    static async createInitTwoPayload(initOne, bankDetailsSubmissionId,formId) {
         return {
             context: {
                 domain: "ONDC:FIS12",
@@ -144,7 +144,7 @@ class InitRequestUtils {
                         id: initOne.initPayload.message.order.items[0].id,
                         xinput: {
                             form: {
-                                id: "FO4"
+                                id: formId
                             },
                             form_response: {
                                 status: "SUCCESS",

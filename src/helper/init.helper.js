@@ -85,7 +85,8 @@ class InitHelper {
 
       const initPayload = await InitRequestUtils.createInitTwoPayload(
         initone,
-        submissionId
+        submissionId,
+        formId
       );
       const initResponse = await InitService.makeInitRequest(initPayload);
 
