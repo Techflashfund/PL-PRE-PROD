@@ -67,7 +67,8 @@ class StatusController {
                 if (formResponse.status === 'APPROVED') {
                     const initThreePayload = await InitRequestUtils.createInitThreePayload(
                         initTwo,
-                        formResponse.submission_id
+                        formResponse.submission_id,
+                        formId
                     );
                     const initResponse = await InitService.makeInitRequest(initThreePayload);
                     

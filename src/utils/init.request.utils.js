@@ -209,7 +209,7 @@ class InitRequestUtils {
             }
         };
     }
-    static async createInitThreePayload(initTwo, submissionId) {
+    static async createInitThreePayload(initTwo, submissionId,formId) {
         return {
             context: {
                 domain: "ONDC:FIS12",
@@ -237,7 +237,7 @@ class InitRequestUtils {
                         id: initTwo.initPayload.message.order.items[0].id,
                         xinput: {
                             form: {
-                                id: "FO5"
+                                id: formId
                             },
                             form_response: {
                                 status: "SUCCESS",
