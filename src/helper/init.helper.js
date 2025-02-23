@@ -1,5 +1,6 @@
 const InitOne = require("../models/initone.model");
 const InitTwo = require("../models/inittwo.nodel");
+const InitThree=require('../models/initthree.model')
 const InitService = require("../services/init.services");
 const InitRequestUtils = require("../utils/init.request.utils");
 const Transaction = require("../models/transaction.model");
@@ -175,10 +176,56 @@ class InitHelper {
     }
   }
   static async handleTypeThree(payload) {
-    console.log('poli poli');
-    
-    return null;
-  }
+    const { context, message } = payload;
+    const formUrl = message.order.items[0].xinput.form.url;
+    const formId = message.order.items[0].xinput.form.id;
+
+    try {
+        // Update InitThree with loan agreement form details
+        await InitThree.findOneAndUpdate(
+            {
+                transactionId: context.transaction_id,
+                providerId: message.order.provider.id,
+            },
+            {
+                $set: {
+                    status: "COMPLETED",
+                    responseTimestamp: new Date(),
+                    initthreeresponse: payload,
+                    documentformurl: formUrl,
+                    documentformId: formId
+                }
+            }
+        );
+
+        // Update Transaction status
+        await Transaction.findOneAndUpdate(
+            { transactionId: context.transaction_id },
+            { status: "INITTHREE_COMPLETED" }
+        );
+
+        return {
+            formUrl,
+            formId
+        };
+
+    } catch (error) {
+        console.error('Error in handleTypeThree:', error);
+        await InitThree.findOneAndUpdate(
+            {
+                transactionId: context.transaction_id,
+                providerId: message.order.provider.id,
+            },
+            {
+                $set: {
+                    status: "FAILED",
+                    responseTimestamp: new Date()
+                }
+            }
+        );
+        throw error;
+    }
+}
 }
 
 module.exports = InitHelper;

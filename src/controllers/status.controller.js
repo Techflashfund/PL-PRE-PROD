@@ -90,6 +90,28 @@ class StatusController {
 
             }
 
+            const initThree = await InitThree.findOne({
+                transactionId: context.transaction_id,
+                documentformId: formId
+            });
+
+            if (initThree) {
+                await InitThree.findByIdAndUpdate(
+                    initThree._id,
+                    {
+                        documentStatus: formResponse.status,
+                        documentSubmissionId: formResponse.submission_id
+                    }
+                );
+        
+                if (formResponse.status === 'APPROVED') {
+                    await Transaction.findOneAndUpdate(
+                        { transactionId: context.transaction_id },
+                        { status: 'INITTHREE_COMPLETED' }
+                    );
+                }
+            }
+
             
 
             // Save status response
