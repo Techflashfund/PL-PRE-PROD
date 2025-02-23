@@ -2,6 +2,8 @@ const SelectThree = require('../models/selectThree.model');
 const InitService = require('../services/init.services');
 const InitRequestUtils = require('../utils/init.request.utils');
 const InitOne = require('../models/initone.model');
+const InitTwo = require('../models/inittwo.nodel');
+const InitThree = require('../models/initthree.model');
 const Transaction = require('../models/transaction.model');
 const Status=require('../models/status.model');
 class StatusController {
@@ -48,6 +50,46 @@ class StatusController {
                 }
 
             }
+
+            const initTwo = await InitTwo.findOne({
+                transactionId: context.transaction_id,
+                emandateformId: formId
+            });
+
+            if (initTwo) {
+                await InitTwo.findByIdAndUpdate(
+                    initTwo._id,
+                    {
+                        emandateStatus: formResponse.status,
+                        emandateSubmissionId: formResponse.submission_id
+                    }
+                );
+                if (formResponse.status === 'APPROVED') {
+                    const initThreePayload = await InitRequestUtils.createInitThreePayload(
+                        initTwo,
+                        formResponse.submission_id
+                    );
+                    const initResponse = await InitService.makeInitRequest(initThreePayload);
+                    
+                    await InitThree.create({
+                        transactionId: context.transaction_id,
+                        providerId: message.order.provider.id,
+                        initPayload: initThreePayload,
+                        initResponse,
+                        status: 'INITIATED',
+                        emandateSubmissionId: formResponse.submission_id,
+                        responseTimestamp: new Date()
+                    });
+
+                    await Transaction.findOneAndUpdate(
+                        { transactionId: context.transaction_id },
+                        { status: 'INITTHREE_INITIATED' }
+                    );
+                }
+
+            }
+
+            
 
             // Save status response
             await Status.create({

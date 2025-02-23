@@ -115,6 +115,193 @@ class InitRequestUtils {
             }
         };
     }
+
+    static async createInitTwoPayload(initOne, bankDetailsSubmissionId) {
+        return {
+            context: {
+                domain: "ONDC:FIS12",
+                location: {
+                    country: { code: "IND" },
+                    city: { code: "*" }
+                },
+                version: "2.0.0",
+                action: "init",
+                bap_uri: initOne.initPayload.context.bap_uri,
+                bap_id: initOne.initPayload.context.bap_id,
+                bpp_id: initOne.initPayload.context.bpp_id,
+                bpp_uri: initOne.initPayload.context.bpp_uri,
+                transaction_id: initOne.transactionId,
+                message_id: uuidv4(),
+                ttl: "PT10M",
+                timestamp: new Date().toISOString()
+            },
+            message: {
+                order: {
+                    provider: {
+                        id: initOne.providerId
+                    },
+                    items: [{
+                        id: initOne.initPayload.message.order.items[0].id,
+                        xinput: {
+                            form: {
+                                id: "FO4"
+                            },
+                            form_response: {
+                                status: "SUCCESS",
+                                submission_id: bankDetailsSubmissionId
+                            }
+                        }
+                    }],
+                    payments: [{
+                        id: "PAYMENT_ID_PERSONAL_LOAN",
+                        collected_by: "BPP",
+                        type: "ON_ORDER",
+                        status: "NOT-PAID",
+                        params: {
+                            bank_code: "XXXXXXXX",
+                            bank_account_number: "xxxxxxxxxxxxxx",
+                            virtual_payment_address: "9988199772@okicic"
+                        },
+                        tags: [
+                            {
+                                descriptor: { code: "BUYER_FINDER_FEES" },
+                                display: false,
+                                list: [
+                                    {
+                                        descriptor: { code: "BUYER_FINDER_FEES_TYPE" },
+                                        value: "percent-annualized"
+                                    },
+                                    {
+                                        descriptor: { code: "BUYER_FINDER_FEES_PERCENTAGE" },
+                                        value: "1"
+                                    }
+                                ]
+                            },
+                            {
+                                descriptor: { code: "SETTLEMENT_TERMS" },
+                                display: false,
+                                list: [
+                                    {
+                                        descriptor: { code: "SETTLEMENT_AMOUNT" },
+                                        value: "1159"
+                                    },
+                                    {
+                                        descriptor: { code: "SETTLEMENT_TYPE" },
+                                        value: "neft"
+                                    },
+                                    {
+                                        descriptor: { code: "DELAY_INTEREST" },
+                                        value: "5"
+                                    },
+                                    {
+                                        descriptor: { code: "STATIC_TERMS" },
+                                        value: "https://bap.credit.becknprotocol.io/personal-banking/loans/personal-loan"
+                                    },
+                                    {
+                                        descriptor: { code: "OFFLINE_CONTRACT" },
+                                        value: "true"
+                                    }
+                                ]
+                            }
+                        ]
+                    }]
+                }
+            }
+        };
+    }
+    static async createInitThreePayload(initTwo, submissionId) {
+        return {
+            context: {
+                domain: "ONDC:FIS12",
+                location: {
+                    country: { code: "IND" },
+                    city: { code: "*" }
+                },
+                version: "2.0.0",
+                action: "init",
+                bap_uri: initTwo.initPayload.context.bap_uri,
+                bap_id: initTwo.initPayload.context.bap_id,
+                bpp_id: initTwo.initPayload.context.bpp_id,
+                bpp_uri: initTwo.initPayload.context.bpp_uri,
+                transaction_id: initTwo.transactionId,
+                message_id: uuidv4(),
+                ttl: "PT10M",
+                timestamp: new Date().toISOString()
+            },
+            message: {
+                order: {
+                    provider: {
+                        id: initTwo.providerId
+                    },
+                    items: [{
+                        id: initTwo.initPayload.message.order.items[0].id,
+                        xinput: {
+                            form: {
+                                id: "FO5"
+                            },
+                            form_response: {
+                                status: "SUCCESS",
+                                submission_id: submissionId
+                            }
+                        }
+                    }],
+                    payments: [{
+                        id: "PAYMENT_ID_PERSONAL_LOAN",
+                        collected_by: "BPP",
+                        type: "ON_ORDER",
+                        status: "NOT-PAID",
+                        params: {
+                            bank_code: "XXXXXXXX",
+                            bank_account_number: "xxxxxxxxxxxxxx",
+                            virtual_payment_address: "9988199772@okicic"
+                        },
+                        tags: [
+                            {
+                                descriptor: { code: "BUYER_FINDER_FEES" },
+                                display: false,
+                                list: [
+                                    {
+                                        descriptor: { code: "BUYER_FINDER_FEES_TYPE" },
+                                        value: "percent-annualized"
+                                    },
+                                    {
+                                        descriptor: { code: "BUYER_FINDER_FEES_PERCENTAGE" },
+                                        value: "1"
+                                    }
+                                ]
+                            },
+                            {
+                                descriptor: { code: "SETTLEMENT_TERMS" },
+                                display: false,
+                                list: [
+                                    {
+                                        descriptor: { code: "SETTLEMENT_AMOUNT" },
+                                        value: "1159"
+                                    },
+                                    {
+                                        descriptor: { code: "SETTLEMENT_TYPE" },
+                                        value: "neft"
+                                    },
+                                    {
+                                        descriptor: { code: "DELAY_INTEREST" },
+                                        value: "5"
+                                    },
+                                    {
+                                        descriptor: { code: "STATIC_TERMS" },
+                                        value: "https://bap.credit.becknprotocol.io/personal-banking/loans/personal-loan"
+                                    },
+                                    {
+                                        descriptor: { code: "OFFLINE_CONTRACT" },
+                                        value: "true"
+                                    }
+                                ]
+                            }
+                        ]
+                    }]
+                }
+            }
+        };
+    }
 }
 
 module.exports = InitRequestUtils;
