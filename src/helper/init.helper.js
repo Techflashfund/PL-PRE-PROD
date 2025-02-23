@@ -126,6 +126,8 @@ class InitHelper {
     }
   }
   static async handleTypeTwo(payload) {
+    console.log('poli polidmkdn');
+    
     const { context, message } = payload;
     const formUrl = payload.message.order.items[0].xinput.form.url;
     const formId = payload.message.order.items[0].xinput.form.id;
