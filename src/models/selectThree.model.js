@@ -13,6 +13,10 @@ const selectThreeSchema = new mongoose.Schema({
         enum: ['INITIATED', 'COMPLETED', 'FAILED'],
         default: 'INITIATED'
     },
+    kycStatus: {
+        type: String
+    },
+    kycSubmissionId: String,
     submissionId: String,
     requestedAmount: Number,
     responseTimestamp: Date,

@@ -6,6 +6,9 @@ const searchRoutes = require('./routes/search.routes');
 const selectRoutes = require('./routes/select.routes');
 const userdetailsroute = require('./routes/userdetails.routes');
 const amountRoutes = require('./routes/amount.routes');
+const statusRoutes = require('./routes/status.routes');
+const initRoutes=require('./routes/init.routes')
+const bankdetailsRoutes=require('./routes/bankdetails.routes')
 const app = express();
 
 // Middleware
@@ -18,8 +21,10 @@ app.use('/api/search', searchRoutes);
 app.use('/on_search', searchRoutes);
 app.use('/on_select', selectRoutes);
 app.use('/form',userdetailsroute)
-
+app.use('/on_status',statusRoutes)
+app.use('/on_init',initRoutes)
 app.use('/amount', amountRoutes);
+app.use('/submit-bank-details',bankdetailsRoutes)
 
 // Connect to MongoDB
 console.log("Using MongoDB URI:", mongoURI); 
