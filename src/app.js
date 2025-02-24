@@ -23,7 +23,7 @@ app.use(cors({
     methods: ['GET', 'POST', 'PUT', 'DELETE'], // Allow specific methods
     allowedHeaders: ['Content-Type', 'Authorization'], // Allow specific headers
 }));
-
+app.options('*', cors());
 // Routes
 app.use('/api/auth', authRoutes);
 app.use('/api/search', searchRoutes);
@@ -38,6 +38,9 @@ app.use('/agrement', confirmRoutes);
 app.use('/on_confirm', confirmRoutes);
 app.use('/consent', updateRoutes);
 app.use('/on_update', updateRoutes);
+app.get('/api/test', (req, res) => {
+    res.json({ message: 'CORS is working!' });
+});
 
 // Connect to MongoDB
 console.log("Using MongoDB URI:", mongoURI); 
