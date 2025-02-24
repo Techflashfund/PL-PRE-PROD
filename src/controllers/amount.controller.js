@@ -12,10 +12,10 @@ class AmountController {
     static async submitAmount(req, res) {
         try {
             console.log('Amount submission request:', req.body);
-            const { amount, bppId, transactionId, userId } = req.body;
+            const { amount, providerId, transactionId, userId } = req.body;
 
             // Validate required fields
-            if (!amount || !bppId || !transactionId || !userId) {
+            if (!amount || !providerId|| !transactionId || !userId) {
                 return res.status(400).json({ 
                     error: 'Missing required fields: amount, bppId, transactionId, userId' 
                 });
@@ -30,7 +30,7 @@ class AmountController {
 
             const selectTwo = await SelectTwo.findOne({
                 transactionId,
-                'onselectRequest.context.bpp_id': bppId
+                 providerId
             });
 
             if (!selectTwo) {
