@@ -12,6 +12,7 @@ const statusRoutes = require('./routes/status.routes');
 const initRoutes = require('./routes/init.routes');
 const updateRoutes = require('./routes/update.routes');
 const bankdetailsRoutes = require('./routes/bankdetails.routes');
+const offerRoutes=require('./routes/offer.routes');
 const app = express();
 
 // Middleware
@@ -38,6 +39,7 @@ app.use('/agrement', confirmRoutes);
 app.use('/on_confirm', confirmRoutes);
 app.use('/consent', updateRoutes);
 app.use('/on_update', updateRoutes);
+app.use('/loan', offerRoutes);
 app.get('/api/test', (req, res) => {
     res.json({ message: 'CORS is working!' });
 });
@@ -51,5 +53,5 @@ mongoose.connect(mongoURI, {
 .then(() => console.log('Connected to MongoDB'))
 .catch(err => console.error('MongoDB connection error:', err));
 
-const PORT = process.env.PORT || 3000;
+const PORT = process.env.PORT || 3001;
 app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
