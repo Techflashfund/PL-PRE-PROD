@@ -15,7 +15,7 @@ class AmountController {
             const { amount, providerId, transactionId, userId } = req.body;
 
             // Validate required fields
-            if (!amount || !providerId|| !transactionId || !userId) {
+            if (!amount || !providerId || !transactionId || !userId) {
                 return res.status(400).json({ 
                     error: 'Missing required fields: amount, bppId, transactionId, userId' 
                 });
