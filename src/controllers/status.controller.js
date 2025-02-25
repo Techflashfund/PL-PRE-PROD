@@ -3,6 +3,7 @@ const InitService = require('../services/init.services');
 const InitRequestUtils = require('../utils/init.request.utils');
 const InitOne = require('../models/initone.model');
 const InitTwo = require('../models/inittwo.nodel');
+const EMandate = require('../models/mandate.model');
 const InitThree = require('../models/initthree.model');
 const KycStatus = require('../models/kyc.model');
 const Transaction = require('../models/transaction.model');
@@ -73,7 +74,16 @@ class StatusController {
                         emandateSubmissionId: formResponse.submission_id
                     }
                 );
-                if (formResponse.status === 'APPROVED') {
+                await EMandate.create({
+                    transactionId: context.transaction_id,
+                    providerId: message.order.provider.id,
+                    formId: formId,
+                    formUrl: message.order.items[0].xinput.form.url,
+                    mandateStatus: formResponse.status,
+                    submissionId: formResponse.submission_id,
+                    statusResponse: req.body
+                });
+                if (formResponse.status === 'APPROVED'||formResponse.status ==='SUCCESS') {
                     const initThreePayload = await InitRequestUtils.createInitThreePayload(
                         initTwo,
                         formResponse.submission_id,
