@@ -24,9 +24,12 @@ app.use(express.json());
 
 // Enable CORS for localhost:3000
 app.use(cors({
-    origin: 'http://localhost:3000', // Allow requests from localhost:3000
-    methods: ['GET', 'POST', 'PUT', 'DELETE'], // Allow specific methods
-    allowedHeaders: ['Content-Type', 'Authorization'], // Allow specific headers
+    origin: [
+        'http://localhost:3000',
+        'https://personal-loan-571d4n33v-techflashfunds-projects.vercel.app'
+    ],
+    methods: ['GET', 'POST', 'PUT', 'DELETE'],
+    allowedHeaders: ['Content-Type', 'Authorization'],
 }));
 app.options('*', cors());
 // Routes
