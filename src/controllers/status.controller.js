@@ -40,7 +40,7 @@ class StatusController {
                 });
 
                 // If KYC approved, make init call
-                if (formResponse.status === 'APPROVED') {
+                if (formResponse.status === 'APPROVED'||formResponse.status ==='SUCCESS') {
                     const initPayload = await InitRequestUtils.createInitOnePayload(selectThree,formResponse.submission_id);
                     const initResponse=await InitService.makeInitRequest(initPayload);
                     await InitOne.create({
