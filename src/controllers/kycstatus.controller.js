@@ -1,27 +1,35 @@
 const SelectThree = require('../models/selectThree.model');
+const KycStatus = require('../models/kyc.model');
+
 
 class KycStatusController {
     static async getKycStatus(req, res) {
         try {
-            const { transactionId } = req.body;
+            const { transactionId,formId } = req.body;
 
-            if (!transactionId) {
-                return res.status(400).json({ error: 'Transaction ID is required' });
+            if (!transactionId || !formId) {
+                return res.status(400).json({ 
+                    error: 'Transaction ID and Form ID are required' 
+                });
             }
 
-            const selectThree = await SelectThree.findOne({ 
-                transactionId 
+            const kycStatus = await KycStatus.findOne({ 
+                transactionId,
+                formId
             });
 
-            if (!selectThree) {
-                return res.status(404).json({ error: 'KYC record not found' });
+            if (!kycStatus) {
+                return res.status(404).json({ 
+                    error: 'KYC record not found' 
+                });
             }
 
             res.status(200).json({
-                kycStatus: selectThree.kycStatus,
-                kycSubmissionId: selectThree.kycSubmissionId,
-                formId: selectThree.formId,
-                transactionId: selectThree.transactionId
+                kycStatus: kycStatus.kycStatus,
+                submissionId: kycStatus.submissionId,
+                formId: kycStatus.formId,
+                transactionId: kycStatus.transactionId,
+                providerId: kycStatus.providerId
             });
 
         } catch (error) {
