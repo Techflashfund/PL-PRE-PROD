@@ -4,6 +4,7 @@ const InitRequestUtils = require('../utils/init.request.utils');
 const InitOne = require('../models/initone.model');
 const InitTwo = require('../models/inittwo.nodel');
 const InitThree = require('../models/initthree.model');
+const KycStatus = require('../models/kyc.model');
 const Transaction = require('../models/transaction.model');
 const Status=require('../models/status.model');
 class StatusController {
@@ -29,6 +30,14 @@ class StatusController {
                         kycSubmissionId: formResponse.submission_id
                     }
                 );
+                await KycStatus.create({
+                    transactionId: context.transaction_id,
+                    providerId: message.order.provider.id,
+                    formId: formId,
+                    kycStatus: formResponse.status,
+                    submissionId: formResponse.submission_id,
+                    statusResponse: req.body
+                });
 
                 // If KYC approved, make init call
                 if (formResponse.status === 'APPROVED') {

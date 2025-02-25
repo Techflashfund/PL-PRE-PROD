@@ -14,6 +14,7 @@ const updateRoutes = require('./routes/update.routes');
 const bankdetailsRoutes = require('./routes/bankdetails.routes');
 const offerRoutes=require('./routes/offer.routes');
 const kycRoutes=require('./routes/kyc.routes')
+const  kycstatusRoutes=require('./routes/kyc.status.routes')
 const app = express();
 
 // Middleware
@@ -42,6 +43,7 @@ app.use('/consent', updateRoutes);
 app.use('/on_update', updateRoutes);
 app.use('/loan', offerRoutes);
 app.use('/kyc-form',kycRoutes)
+app.use('/kyc',kycstatusRoutes)
 app.get('/api/test', (req, res) => {
     res.json({ message: 'CORS is working!' });
 });
