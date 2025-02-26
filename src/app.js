@@ -19,6 +19,7 @@ const mandateRoutes=require('./routes/mandate.routes')
 const mandatestatusRoutes=require('./routes/mandatestatus.routes') 
 const documentRoutes=require('./routes/document.routes')
 const docstatusRoutes=require('./routes/docstatus.routes')
+const nostatsRoutes=require('./routes/noform.routes')
 const app = express();
 
 // Middleware
@@ -56,6 +57,7 @@ app.use('/mandate-form',mandateRoutes)
 app.use('/mandate-status',mandatestatusRoutes)
 app.use('/document-form',documentRoutes)
 app.use('/document-status',docstatusRoutes)
+app.use('/noform-status',nostatsRoutes)
 app.get('/api/test', (req, res) => {
     res.json({ message: 'CORS is working!' });
 });

@@ -191,6 +191,33 @@ class StatusController {
             res.status(500).json({ error: error.message });
         }
     }
+    static async getNoFormStatus(req, res) {
+        try {
+            const { transactionId } = req.body;
+    
+            if (!transactionId) {
+                return res.status(400).json({
+                    error: 'Transaction ID is required'
+                });
+            }
+    
+            const noFormStatus = await NoFormStatus.findOne({ transactionId });
+    
+            if (!noFormStatus) {
+                return res.status(404).json({
+                    error: 'No status found for this transaction'
+                });
+            }
+    
+            res.status(200).json({
+                status: noFormStatus.statusPayload
+            });
+    
+        } catch (error) {
+            console.error('Error fetching non-form status:', error);
+            res.status(500).json({ error: error.message });
+        }
+    }
 }
 
 module.exports = StatusController;
