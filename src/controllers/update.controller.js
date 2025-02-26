@@ -1,3 +1,4 @@
+const { v4: uuidv4 } = require('uuid');
 const Update = require('../models/update.model'); // Import the Update model
 const Transaction = require('../models/transaction.model'); // Import the Transaction model
 const UpdateService = require('../services/update.services'); // Import the Update service
