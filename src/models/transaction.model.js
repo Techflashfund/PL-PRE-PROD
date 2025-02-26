@@ -21,9 +21,9 @@ const transactionSchema = new mongoose.Schema({
         required: true
     },
     status: {
-        type: String,
-        enum: ['PENDING', 'COMPLETED', 'FAILED','FORM_SUBMITTED','SELECTONE_INITIATED','SELECTONE_COMPLETED','SELECTTWO_INITIATED','SELECTWO_COMPLETED','SELECTHREE_INITIATED','SELECTHREE_COMPLETED','INITONE_INITIATED','INITONE_COMPLETED','INITTWO_INITIATED','INITTWO_COMPLETED','INITTHREE_INITIATED','INITTHREE_COMPLETED','CONFIRM_INITIATED','CONFIRM_COMPLETED'],
-        default: 'PENDING'
+        type: String
+
+        
     },
     formDetails: {
         type: mongoose.Schema.Types.ObjectId,

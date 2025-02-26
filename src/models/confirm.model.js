@@ -5,26 +5,50 @@ const confirmSchema = new mongoose.Schema({
         type: String,
         required: true
     },
-    providerId: {
-        type: String,
-        required: true
-    },
-    confirmPayload: {
-        type: Object,
-        required: true
-    },
-    confirmResponse: {
-        type: Object,
-        required: true
-    },
-    status: {
-        type: String
-    },
+    providerId: String,
+    confirmPayload: Object,
+    confirmResponse: Object,
+    status: String,
     confirmationId: String,
-    confirmationTimestamp: {
-        type: Date,
-        default: Date.now
+    loanDetails: {
+        amount: String,
+        currency: String,
+        interestRate: String,
+        term: String,
+        interestRateType: String,
+        applicationFee: String,
+        foreclosureFee: String,
+        installmentAmount: String,
+        repaymentFrequency: String,
+        numberOfInstallments: String
     },
+    breakdown: {
+        principal: String,
+        interest: String,
+        processingFee: String,
+        insuranceCharges: String,
+        netDisbursedAmount: String,
+        otherCharges: String
+    },
+    customerDetails: {
+        name: String,
+        phone: String,
+        email: String
+    },
+    paymentSchedule: [{
+        installmentId: String,
+        amount: String,
+        startDate: Date,
+        endDate: Date,
+        status: String
+    }],
+    documents: [{
+        code: String,
+        name: String,
+        description: String,
+        url: String,
+        mimeType: String
+    }],
     responseTimestamp: {
         type: Date,
         default: Date.now
@@ -33,4 +57,4 @@ const confirmSchema = new mongoose.Schema({
     timestamps: true
 });
 
-module.exports = mongoose.models.Confirm || mongoose.model('Confirm', confirmSchema);
+module.exports = mongoose.model('Confirm', confirmSchema);
