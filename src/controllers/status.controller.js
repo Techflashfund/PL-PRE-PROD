@@ -8,6 +8,7 @@ const InitThree = require('../models/initthree.model');
 const KycStatus = require('../models/kyc.model');
 const Transaction = require('../models/transaction.model');
 const Document = require('../models/document.model');
+const NoFormStatus = require('../models/nonstatus.model');
 const Status=require('../models/status.model');
 class StatusController {
     static async onStatus(req, res) {
