@@ -7,6 +7,7 @@ const EMandate = require('../models/mandate.model');
 const InitThree = require('../models/initthree.model');
 const KycStatus = require('../models/kyc.model');
 const Transaction = require('../models/transaction.model');
+const Document = require('../models/document.model');
 const Status=require('../models/status.model');
 class StatusController {
     static async onStatus(req, res) {
@@ -122,6 +123,16 @@ class StatusController {
                         documentSubmissionId: formResponse.submission_id
                     }
                 );
+
+                await Document.create({
+                    transactionId: context.transaction_id,
+                    providerId: message.order.provider.id,
+                    formId: formId,
+                    formUrl: message.order.items[0].xinput.form.url,
+                    documentStatus: formResponse.status,
+                    submissionId: formResponse.submission_id,
+                    statusResponse: req.body
+                });
         
                 if (formResponse.status === 'APPROVED') {
                     await Transaction.findOneAndUpdate(

@@ -17,6 +17,8 @@ const kycRoutes=require('./routes/kyc.routes')
 const  kycstatusRoutes=require('./routes/kyc.status.routes')
 const mandateRoutes=require('./routes/mandate.routes') 
 const mandatestatusRoutes=require('./routes/mandatestatus.routes') 
+const documentRoutes=require('./routes/document.routes')
+const docstatusRoutes=require('./routes/docstatus.routes')
 const app = express();
 
 // Middleware
@@ -52,6 +54,8 @@ app.use('/kyc-form',kycRoutes)
 app.use('/kyc',kycstatusRoutes)
 app.use('/mandate-form',mandateRoutes)
 app.use('/mandate-status',mandatestatusRoutes)
+app.use('/document-form',documentRoutes)
+app.use('/document-status',docstatusRoutes)
 app.get('/api/test', (req, res) => {
     res.json({ message: 'CORS is working!' });
 });
