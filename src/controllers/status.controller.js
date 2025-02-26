@@ -15,7 +15,7 @@ class StatusController {
         try {
             const { context, message } = req.body;
             const { order } = message;
-            if (!order.items[0].xinput.form.id) {
+            if (!order.items[0].xinput || !order.items[0].xinput.form) {
                 await NoFormStatus.create({
                     transactionId: context.transaction_id,
                     statusPayload: req.body
