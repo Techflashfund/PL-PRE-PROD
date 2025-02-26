@@ -19,9 +19,7 @@ class ConfirmController {
                 return res.status(404).json({ error: 'Init three record not found' });
             }
 
-            if (initThree.documentStatus !== 'APPROVED') {
-                return res.status(400).json({ error: 'Document not approved yet' });
-            }
+            
 
             const confirmPayload = ConfirmPayloadHandler.createConfirmPayload(initThree);
             const confirmResponse = await ConfirmService.makeConfirmRequest(confirmPayload);
