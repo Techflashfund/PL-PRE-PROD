@@ -82,7 +82,8 @@ class UpdateController{
                                 consentUpdateResponse: updateResponse,
                                 status: 'CONSENT_APPROVED'
                             }
-                        }
+                        },
+                        { upsert: true, new: true }
                     ),
                     Transaction.findOneAndUpdate(
                         { transactionId: context.transaction_id },

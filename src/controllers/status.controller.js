@@ -14,6 +14,16 @@ class StatusController {
         try {
             const { context, message } = req.body;
             const { order } = message;
+            if (!order.items[0].xinput.form.id) {
+                await NoFormStatus.create({
+                    transactionId: context.transaction_id,
+                    statusPayload: req.body
+                });
+    
+                return res.status(200).json({
+                    message: 'Non-form status saved successfully'
+                });
+            }
             const formId = message.order.items[0].xinput.form.id;
             const formResponse = message.order.items[0].xinput.form_response;
 
