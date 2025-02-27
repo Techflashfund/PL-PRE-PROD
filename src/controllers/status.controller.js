@@ -286,7 +286,7 @@ class StatusController {
 
         const transactions = await Transaction.find({
             user: userId,
-            status: "LOAN_DISBURSED",
+           
         });
 
         if (!transactions.length) {
