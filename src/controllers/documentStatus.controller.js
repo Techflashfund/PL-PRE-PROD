@@ -23,7 +23,7 @@ class DocumentStatusController {
             }
 
             res.status(200).json({
-                documentStatus: documentStatus.documentStatus,
+                documentStatus: documentStatus.documentStatus === 'APPROVED' ? 'SUCCESS' : documentStatus.documentStatus,
                 submissionId: documentStatus.submissionId,
                 formId: documentStatus.formId,
                 formUrl: documentStatus.formUrl,

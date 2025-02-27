@@ -14,6 +14,9 @@ const disbursedLoanSchema = new mongoose.Schema({
         repaymentFrequency: String,
         totalInstallments: String
     },
+    status: {
+        type: String
+    },
     breakdown: {
         principal: String,
         interest: String,

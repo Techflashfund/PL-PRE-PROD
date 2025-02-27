@@ -23,7 +23,7 @@ class MandateStatusController {
             }
 
             res.status(200).json({
-                mandateStatus: mandateStatus.mandateStatus,
+                mandateStatus: mandateStatus.mandateStatus === 'APPROVED' ? 'SUCCESS' : mandateStatus.mandateStatus,
                 submissionId: mandateStatus.submissionId,
                 formId: mandateStatus.formId,
                 formUrl: mandateStatus.formUrl,

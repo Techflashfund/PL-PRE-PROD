@@ -25,7 +25,7 @@
                 }
 
                 res.status(200).json({
-                    kycStatus: kycStatus.kycStatus,
+                    kycStatus: kycStatus.kycStatus === 'APPROVED' ? 'SUCCESS' : kycStatus.kycStatus,
                     submissionId: kycStatus.submissionId,
                     formId: kycStatus.formId,
                     transactionId: kycStatus.transactionId,

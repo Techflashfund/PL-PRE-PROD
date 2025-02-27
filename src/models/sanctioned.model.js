@@ -46,8 +46,8 @@ const sanctionedLoanSchema = new mongoose.Schema({
         mimeType: String
     }],
     status: {
-        type: String,
-        default: 'SANCTIONED'
+        type: String
+    
     },
     sanctionDate: {
         type: Date,
