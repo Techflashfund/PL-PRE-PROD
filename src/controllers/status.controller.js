@@ -317,7 +317,8 @@ class StatusController {
                     },
                 };
                 
-                await statusRequest(statusPayload);
+                const resss=await statusRequest(statusPayload);
+                console.log('woowww',resss);
             })
         );
 
@@ -333,20 +334,15 @@ class StatusController {
                 
                 if (!loan) return null;
 
-                return {
-                    transactionId: loan.transactionId,
-                    providerId: loan.providerId,
-                    loanAmount: loan.loanDetails?.amount,
-                    status: loan.status,
-                    latestResponse: loan.Response
-                };
+                return loan.Response
+                
             })
         );
-
+        const validLoans = updatedLoans.filter(loan => loan !== null);
         res.status(200).json({
             message: "Loan status check completed",
-            totalLoans: updatedLoans.filter((loan) => loan !== null).length,
-            loans: updatedLoans.filter((loan) => loan !== null),
+            totalLoans: validLoans.length,
+            loans: validLoans
         });
 
     } catch (error) {
