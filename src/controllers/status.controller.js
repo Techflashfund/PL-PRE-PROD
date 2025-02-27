@@ -17,259 +17,303 @@ const { statusRequest } = require("../services/status.service");
 const OnStatusLog = require("../models/onstatuslog");
 
 class StatusController {
-  static async onStatus(req, res) {
-    try {
-      const { context, message } = req.body;
-      console.log("Status request received:", req.body);
-      await OnStatusLog.create({
-        transactionId: context.transaction_id,
-        payload: req.body,
-      });
-      const { order } = message;
-      
-        
-        const fulfillmentState = order.fulfillments[0].state.descriptor.code;
-        if (fulfillmentState === "DISBURSED") {
-          try {
-            const updatedLoan = await DisbursedLoan.findOneAndUpdate(
-              { transactionId: context.transaction_id },
-              {
-                $set: {
-                  providerId: order.provider.id,
-                  loanDetails: {
-                    amount: order.items[0].price.value,
-                    currency: order.items[0].price.currency,
-                    term: order.items[0].tags[0].list.find(
-                      (i) => i.descriptor.code === "TERM"
-                    )?.value,
-                    interestRate: order.items[0].tags[0].list.find(
-                      (i) => i.descriptor.code === "INTEREST_RATE"
-                    )?.value,
-                  },
-                  paymentSchedule: order.payments,
-                  documents: order.documents,
-                  status: "DISBURSED",
-                  Response: req.body,
-                  updatedAt: new Date(),
-                },
-              },
-              {
-                new: true,
-                upsert: true,
-                setDefaultsOnInsert: true,
-              }
-            );
-
-            console.log(
-              `DisbursedLoan updated for transaction: ${context.transaction_id}`
-            );
-
-            // Update transaction status
-            await Transaction.findOneAndUpdate(
-              { transactionId: context.transaction_id },
-              { status: "LOAN_DISBURSED" },
-              { new: true }
-            );
-          } catch (error) {
-            console.error("Error updating disbursed loan:", error);
-            throw error;
+    static async onStatus(req, res) {
+        try {
+          const { context, message } = req.body;
+          
+          if (!context || !message || !message.order) {
+            return res.status(400).json({ error: "Invalid request body structure" });
           }
-        }
-        if (fulfillmentState === "SANCTIONED") {
-          await SanctionedLoan.create({
+      
+          console.log("Status request received:", req.body);
+          
+          // Log the status request
+          await OnStatusLog.create({
             transactionId: context.transaction_id,
-            providerId: order.provider.id,
-            loanDetails: {
-              amount: order.items[0].price.value,
-              currency: order.items[0].price.currency,
-              term: order.items[0].tags[0].list.find(
-                (i) => i.descriptor.code === "TERM"
+            payload: req.body,
+          });
+          
+          const { order } = message;
+          const transactionId = context.transaction_id;
+          
+          // Process fulfillment state if present
+          if (order.fulfillments && order.fulfillments[0] && order.fulfillments[0].state && 
+              order.fulfillments[0].state.descriptor && order.fulfillments[0].state.descriptor.code) {
+            
+            const fulfillmentState = order.fulfillments[0].state.descriptor.code;
+            
+            // Extract common loan details
+            const loanDetails = {
+              amount: order.items?.[0]?.price?.value,
+              currency: order.items?.[0]?.price?.currency,
+              term: order.items?.[0]?.tags?.[0]?.list?.find(
+                (i) => i.descriptor?.code === "TERM"
               )?.value,
-              interestRate: order.items[0].tags[0].list.find(
-                (i) => i.descriptor.code === "INTEREST_RATE"
+              interestRate: order.items?.[0]?.tags?.[0]?.list?.find(
+                (i) => i.descriptor?.code === "INTEREST_RATE"
+              )?.value,
+            };
+            
+            // Handle DISBURSED state
+            if (fulfillmentState === "DISBURSED") {
+              try {
+                const updatedLoan = await DisbursedLoan.findOneAndUpdate(
+                  { transactionId },
+                  {
+                    $set: {
+                      providerId: order.provider.id,
+                      loanDetails,
+                      paymentSchedule: order.payments || [],
+                      documents: order.documents || [],
+                      status: "DISBURSED",
+                      Response: req.body,
+                      updatedAt: new Date(),
+                    },
+                  },
+                  {
+                    new: true,
+                    upsert: true,
+                    setDefaultsOnInsert: true,
+                  }
+                );
+      
+                console.log(`DisbursedLoan updated for transaction: ${transactionId}`);
+      
+                // Update transaction status
+                await Transaction.findOneAndUpdate(
+                  { transactionId },
+                  { status: "LOAN_DISBURSED" },
+                  { new: true }
+                );
+              } catch (error) {
+                console.error("Error updating disbursed loan:", error);
+                throw error;
+              }
+            }
+            
+            // Handle SANCTIONED state
+            if (fulfillmentState === "SANCTIONED") {
+              await SanctionedLoan.findOneAndUpdate(
+                { transactionId },
+                {
+                  $set: {
+                    providerId: order.provider.id,
+                    loanDetails,
+                    status: "SANCTIONED",
+                    updatedAt: new Date(),
+                  }
+                },
+                {
+                  new: true,
+                  upsert: true,
+                  setDefaultsOnInsert: true
+                }
+              );
+      
+              await Transaction.findOneAndUpdate(
+                { transactionId },
+                { status: "LOAN_SANCTIONED" },
+                { new: true }
+              );
+            }
+          }
+          
+          // Check if xinput form exists
+          if (!order.items?.[0]?.xinput?.form?.id || !order.items?.[0]?.xinput?.form_response) {
+            return res.status(200).json({
+              message: "Status processed successfully - no form processing required",
+            });
+          }
+          
+          const formId = order.items[0].xinput.form.id;
+          const formResponse = order.items[0].xinput.form_response;
+          const providerId = order.provider.id;
+          
+          // Define approved statuses for consistency
+          const APPROVED_STATUSES = ["APPROVED", "SUCCESS"];
+          const isApproved = APPROVED_STATUSES.includes(formResponse.status);
+          
+          // Find and process SelectThree record
+          const selectThree = await SelectThree.findOne({
+            transactionId,
+            formId,
+          });
+      
+          if (selectThree) {
+            // Update KYC status
+            await SelectThree.findByIdAndUpdate(selectThree._id, {
+              kycStatus: formResponse.status,
+              kycSubmissionId: formResponse.submission_id,
+            });
+            
+            await KycStatus.create({
+              transactionId,
+              providerId,
+              formId,
+              kycStatus: formResponse.status,
+              submissionId: formResponse.submission_id,
+              statusResponse: req.body,
+            });
+      
+            // If KYC approved, make init call
+            if (isApproved) {
+              try {
+                const initPayload = await InitRequestUtils.createInitOnePayload(
+                  selectThree,
+                  formResponse.submission_id
+                );
+                
+                const initResponse = await InitService.makeInitRequest(initPayload);
+                
+                await InitOne.create({
+                  transactionId,
+                  providerId,
+                  initPayload,
+                  initResponse,
+                  status: "INITIATED",
+                  kycSubmissionId: formResponse.submission_id,
+                  responseTimestamp: new Date(),
+                });
+                
+                await Transaction.findOneAndUpdate(
+                  { transactionId },
+                  { status: "INITONE_INITIATED" },
+                  { new: true }
+                );
+              } catch (initError) {
+                console.error("Error in InitOne process:", initError);
+                // Continue processing rather than failing the entire request
+              }
+            }
+          }
+      
+          // Find and process InitTwo record
+          const initTwo = await InitTwo.findOne({
+            transactionId,
+            emandateformId: formId,
+          });
+      
+          if (initTwo) {
+            await InitTwo.findByIdAndUpdate(initTwo._id, {
+              emandateStatus: formResponse.status,
+              emandateSubmissionId: formResponse.submission_id,
+            });
+            
+            await EMandate.create({
+              transactionId,
+              providerId,
+              formId,
+              formUrl: order.items[0].xinput.form.url,
+              mandateStatus: formResponse.status,
+              submissionId: formResponse.submission_id,
+              statusResponse: req.body,
+            });
+            
+            if (isApproved) {
+              try {
+                const initThreePayload = await InitRequestUtils.createInitThreePayload(
+                  initTwo,
+                  formResponse.submission_id,
+                  formId
+                );
+                
+                const initResponse = await InitService.makeInitRequest(initThreePayload);
+      
+                await InitThree.create({
+                  transactionId,
+                  providerId,
+                  initPayload: initThreePayload,
+                  initResponse,
+                  status: "INITIATED",
+                  emandateSubmissionId: formResponse.submission_id,
+                  responseTimestamp: new Date(),
+                });
+      
+                await Transaction.findOneAndUpdate(
+                  { transactionId },
+                  { status: "INITTHREE_INITIATED" },
+                  { new: true }
+                );
+              } catch (initError) {
+                console.error("Error in InitThree process:", initError);
+                // Continue processing rather than failing the entire request
+              }
+            }
+          }
+      
+          // Find and process InitThree record
+          const initThree = await InitThree.findOne({
+            transactionId,
+            documentformId: formId,
+          });
+      
+          if (initThree) {
+            await InitThree.findByIdAndUpdate(initThree._id, {
+              documentStatus: formResponse.status,
+              documentSubmissionId: formResponse.submission_id,
+            });
+      
+            await Document.create({
+              transactionId,
+              providerId,
+              formId,
+              formUrl: order.items[0].xinput.form.url,
+              documentStatus: formResponse.status,
+              submissionId: formResponse.submission_id,
+              statusResponse: req.body,
+            });
+      
+            if (formResponse.status === "APPROVED") {
+              await Transaction.findOneAndUpdate(
+                { transactionId },
+                { status: "INITTHREE_COMPLETED" },
+                { new: true }
+              );
+            }
+          }
+      
+          // Save status response with proper validation
+          await Status.create({
+            transactionId,
+            providerId,
+            bppId: context.bpp_id,
+            formId: order.items[0].xinput.form.id,
+            formResponse: order.items[0].xinput.form_response,
+            loanDetails: {
+              amount: order.items[0]?.price?.value,
+              term: order.items[0]?.tags?.[0]?.list?.find(
+                (i) => i.descriptor?.code === "TERM"
+              )?.value,
+              interestRate: order.items[0]?.tags?.[0]?.list?.find(
+                (i) => i.descriptor?.code === "INTEREST_RATE"
+              )?.value,
+              installmentAmount: order.items[0]?.tags?.[0]?.list?.find(
+                (i) => i.descriptor?.code === "INSTALLMENT_AMOUNT"
               )?.value,
             },
-            status: "SANCTIONED",
+            paymentSchedule:
+              order.payments && Array.isArray(order.payments)
+                ? order.payments
+                    .filter((p) => p && p.type === "POST_FULFILLMENT")
+                    .map((p) => ({
+                      installmentId: p.id,
+                      amount: p.params?.amount,
+                      dueDate: p.time?.range?.end,
+                      status: p.status,
+                    }))
+                : [],
+            statusResponse: req.body,
           });
-
-          await Transaction.findOneAndUpdate(
-            { transactionId: context.transaction_id },
-            { status: "LOAN_SANCTIONED" }
-          );
-        }
-       
       
-      const formId = message.order.items[0].xinput.form.id;
-      const formResponse = message.order.items[0].xinput.form_response;
-
-      // Find matching SelectThree record
-      const selectThree = await SelectThree.findOne({
-        transactionId: context.transaction_id,
-        formId: formId,
-      });
-
-      if (selectThree) {
-        // Update KYC status
-        await SelectThree.findByIdAndUpdate(selectThree._id, {
-          kycStatus: formResponse.status,
-          kycSubmissionId: formResponse.submission_id,
-        });
-        await KycStatus.create({
-          transactionId: context.transaction_id,
-          providerId: message.order.provider.id,
-          formId: formId,
-          kycStatus: formResponse.status,
-          submissionId: formResponse.submission_id,
-          statusResponse: req.body,
-        });
-
-        // If KYC approved, make init call
-        if (
-          formResponse.status === "APPROVED" ||
-          formResponse.status === "SUCCESS"
-        ) {
-          const initPayload = await InitRequestUtils.createInitOnePayload(
-            selectThree,
-            formResponse.submission_id
-          );
-          const initResponse = await InitService.makeInitRequest(initPayload);
-          await InitOne.create({
-            transactionId: context.transaction_id,
-            providerId: message.order.provider.id,
-            initPayload,
-            initResponse,
-            status: "INITIATED",
-            kycSubmissionId: formResponse.submission_id,
-            responseTimestamp: new Date(),
+          res.status(200).json({
+            message: "Status processed successfully",
+            isApproved,
           });
-          await Transaction.findOneAndUpdate(
-            { transactionId: context.transaction_id },
-            { status: "INITONE_INITIATED" }
-          );
+        } catch (error) {
+          console.error("Status processing failed:", error);
+          res.status(500).json({ error: error.message });
         }
       }
-
-      const initTwo = await InitTwo.findOne({
-        transactionId: context.transaction_id,
-        emandateformId: formId,
-      });
-
-      if (initTwo) {
-        await InitTwo.findByIdAndUpdate(initTwo._id, {
-          emandateStatus: formResponse.status,
-          emandateSubmissionId: formResponse.submission_id,
-        });
-        await EMandate.create({
-          transactionId: context.transaction_id,
-          providerId: message.order.provider.id,
-          formId: formId,
-          formUrl: message.order.items[0].xinput.form.url,
-          mandateStatus: formResponse.status,
-          submissionId: formResponse.submission_id,
-          statusResponse: req.body,
-        });
-        if (
-          formResponse.status === "APPROVED" ||
-          formResponse.status === "SUCCESS"
-        ) {
-          const initThreePayload =
-            await InitRequestUtils.createInitThreePayload(
-              initTwo,
-              formResponse.submission_id,
-              formId
-            );
-          const initResponse = await InitService.makeInitRequest(
-            initThreePayload
-          );
-
-          await InitThree.create({
-            transactionId: context.transaction_id,
-            providerId: message.order.provider.id,
-            initPayload: initThreePayload,
-            initResponse,
-            status: "INITIATED",
-            emandateSubmissionId: formResponse.submission_id,
-            responseTimestamp: new Date(),
-          });
-
-          await Transaction.findOneAndUpdate(
-            { transactionId: context.transaction_id },
-            { status: "INITTHREE_INITIATED" }
-          );
-        }
-      }
-
-      const initThree = await InitThree.findOne({
-        transactionId: context.transaction_id,
-        documentformId: formId,
-      });
-
-      if (initThree) {
-        await InitThree.findByIdAndUpdate(initThree._id, {
-          documentStatus: formResponse.status,
-          documentSubmissionId: formResponse.submission_id,
-        });
-
-        await Document.create({
-          transactionId: context.transaction_id,
-          providerId: message.order.provider.id,
-          formId: formId,
-          formUrl: message.order.items[0].xinput.form.url,
-          documentStatus: formResponse.status,
-          submissionId: formResponse.submission_id,
-          statusResponse: req.body,
-        });
-
-        if (formResponse.status === "APPROVED") {
-          await Transaction.findOneAndUpdate(
-            { transactionId: context.transaction_id },
-            { status: "INITTHREE_COMPLETED" }
-          );
-        }
-      }
-
-      // Save status response
-      await Status.create({
-        transactionId: context.transaction_id,
-        providerId: order.provider.id,
-        bppId: context.bpp_id,
-        formId: order.items[0].xinput.form.id,
-        formResponse: order.items[0].xinput.form_response,
-        loanDetails: {
-          amount: order.items[0].price?.value,
-          term: order.items[0]?.tags?.[0]?.list?.find(
-            (i) => i.descriptor?.code === "TERM"
-          )?.value,
-          interestRate: order.items[0]?.tags?.[0]?.list?.find(
-            (i) => i.descriptor?.code === "INTEREST_RATE"
-          )?.value,
-          installmentAmount: order.items[0]?.tags?.[0]?.list?.find(
-            (i) => i.descriptor?.code === "INSTALLMENT_AMOUNT"
-          )?.value,
-        },
-        paymentSchedule:
-          order.payments && Array.isArray(order.payments)
-            ? order.payments
-                .filter((p) => p && p.type === "POST_FULFILLMENT")
-                .map((p) => ({
-                  installmentId: p.id,
-                  amount: p.params?.amount,
-                  dueDate: p.time?.range?.end,
-                  status: p.status,
-                }))
-            : [],
-        statusResponse: req.body,
-      });
-
-      res.status(200).json({
-        message: "Status processed successfully",
-        isApproved: formResponse.status === "APPROVED",
-      });
-    } catch (error) {
-      console.error("Status processing failed:", error);
-      res.status(500).json({ error: error.message });
-    }
-  }
   static async getNoFormStatus(req, res) {
     try {
       const { transactionId } = req.body;
