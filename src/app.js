@@ -21,7 +21,8 @@ const mandatestatusRoutes=require('./routes/mandatestatus.routes')
 const documentRoutes=require('./routes/document.routes')
 const docstatusRoutes=require('./routes/docstatus.routes')
 const nostatsRoutes=require('./routes/noform.routes')
-const forclosureRoutes=require('./routes/forclosure.routes')
+const forclosureRoutes=require('./routes/forclosure.routes');
+const checkLoanStatus = require('./routes/checkloanstatus.routes');
 const app = express();
 
 // Middleware
@@ -69,6 +70,7 @@ app.use('/document-form',documentRoutes)
 app.use('/document-status',docstatusRoutes)
 app.use('/noform-status',nostatsRoutes)
 app.use('/foreclosure',forclosureRoutes)
+app.use('/check-loan-status',checkLoanStatus)
 app.get('/api/test', (req, res) => {
     res.json({ message: 'CORS is working!' });
 });

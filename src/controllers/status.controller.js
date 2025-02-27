@@ -12,6 +12,7 @@ const NoFormStatus = require('../models/nonstatus.model');
 const Status=require('../models/status.model');
 const DisbursedLoan = require('../models/disbursed.model');
 const SanctionedLoan = require('../models/sanctioned.model');
+const { v4: uuidv4 } = require('uuid');
 class StatusController {
     static async onStatus(req, res) {
         try {
@@ -255,6 +256,57 @@ class StatusController {
     
         } catch (error) {
             console.error('Error fetching non-form status:', error);
+            res.status(500).json({ error: error.message });
+        }
+    }
+    static async checkLoanStatus(req, res) {
+        try {
+            const { userId } = req.body;
+    
+            const transactions = await Transaction.find({ 
+                user: userId,
+                status: 'LOAN_DISBURSED'
+            });
+    
+            if (!transactions.length) {
+                return res.status(404).json({
+                    message: 'No disbursed loans found'
+                });
+            }
+    
+            const loanDetails = await Promise.all(
+                transactions.map(async (transaction) => {
+                    const loan = await DisbursedLoan.findOne({
+                        transactionId: transaction.transactionId
+                    });
+    
+                    if (!loan) return null;
+    
+                    return {
+                        transactionId: loan.transactionId,
+                        providerId: loan.providerId,
+                        loanAmount: loan.loanDetails.amount,
+                        currency: loan.loanDetails.currency,
+                        term: loan.loanDetails.term,
+                        interestRate: loan.loanDetails.interestRate,
+                        disbursementDate: loan.disbursementDate,
+                        status: loan.status,
+                        breakdown: loan.breakdown,
+                        paymentSchedule: loan.paymentSchedule,
+                        customerDetails: loan.customerDetails,
+                        response: loan.Response
+                    };
+                })
+            );
+    
+            res.status(200).json({
+                message: 'Loan status check completed',
+                totalLoans: loanDetails.filter(loan => loan !== null).length,
+                loans: loanDetails.filter(loan => loan !== null)
+            });
+    
+        } catch (error) {
+            console.error('Loan status check failed:', error);
             res.status(500).json({ error: error.message });
         }
     }
