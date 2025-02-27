@@ -18,6 +18,7 @@ class StatusController {
   static async onStatus(req, res) {
     try {
       const { context, message } = req.body;
+      console.log("Status request received:", req.body);
       const { order } = message;
       if (!order.items[0].xinput || !order.items[0].xinput.form) {
         await NoFormStatus.create({
