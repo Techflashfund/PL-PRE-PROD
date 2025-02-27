@@ -49,7 +49,12 @@ const disbursedLoanSchema = new mongoose.Schema({
     disbursementDate: {
         type: Date,
         default: Date.now
+    },
+    Response: {
+        type: Object,
+        required: true
     }
+    
 }, {
     timestamps: true
 });

@@ -3,6 +3,8 @@ const Update = require('../models/update.model'); // Import the Update model
 const Transaction = require('../models/transaction.model'); // Import the Transaction model
 const UpdateService = require('../services/update.services'); // Import the Update service
 const DisbursedLoan = require('../models/disbursed.model');
+const ForeclosureLinks = require('../models/forclosurelink.model');
+
 class UpdateController{
     static async update(req,res){
         return null
@@ -16,7 +18,21 @@ class UpdateController{
             const fulfillmentState = order.fulfillments[0].state.descriptor.code;
 
             // Save update response
-            
+            const foreclosurePayment = order.payments.find(p => 
+                p.time?.label === 'FORECLOSURE' && p.url
+            );
+            if (foreclosurePayment) {
+                await ForeclosureLinks.create({
+                    transactionId: context.transaction_id,
+                    orderId: order.id,
+                    paymentUrl: foreclosurePayment.url,
+                    paymentDetails: {
+                        amount: foreclosurePayment.params.amount,
+                        currency: foreclosurePayment.params.currency,
+                        status: foreclosurePayment.status
+                    }
+                });
+            }
 
             
 
@@ -86,6 +102,7 @@ class UpdateController{
                 //     }
                 // );
             }
+           
             if (fulfillmentState === 'DISBURSED') {
                 const loanInfo = message.order.items[0].tags[0].list;
                 const breakup = message.order.quote.breakup;
@@ -131,7 +148,8 @@ class UpdateController{
                         description: doc.descriptor.long_desc,
                         url: doc.url,
                         mimeType: doc.mime_type
-                    }))
+                    })),
+                    Response:req.body
                 });
             
                 await Transaction.findOneAndUpdate(
