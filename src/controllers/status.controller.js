@@ -14,11 +14,17 @@ const DisbursedLoan = require("../models/disbursed.model");
 const SanctionedLoan = require("../models/sanctioned.model");
 const { v4: uuidv4 } = require("uuid");
 const { statusRequest } = require("../services/status.service");
+const OnStatusLog = require("../models/onstatuslog");
+
 class StatusController {
   static async onStatus(req, res) {
     try {
       const { context, message } = req.body;
       console.log("Status request received:", req.body);
+      await OnStatusLog.create({
+        transactionId: context.transaction_id,
+        payload: req.body
+    });
       const { order } = message;
       if (!order.items[0].xinput || !order.items[0].xinput.form) {
         await NoFormStatus.create({
