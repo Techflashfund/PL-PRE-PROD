@@ -10,6 +10,8 @@ const Transaction = require('../models/transaction.model');
 const Document = require('../models/document.model');
 const NoFormStatus = require('../models/nonstatus.model');
 const Status=require('../models/status.model');
+const DisbursedLoan = require('../models/disbursed.model');
+const SanctionedLoan = require('../models/sanctioned.model');
 class StatusController {
     static async onStatus(req, res) {
         try {
@@ -20,7 +22,45 @@ class StatusController {
                     transactionId: context.transaction_id,
                     statusPayload: req.body
                 });
-    
+                const fulfillmentState = order.fulfillments[0].state.descriptor.code;
+                if (fulfillmentState === 'DISBURSED') {
+                    await DisbursedLoan.create({
+                        transactionId: context.transaction_id,
+                        providerId: order.provider.id,
+                        loanDetails: {
+                            amount: order.items[0].price.value,
+                            currency: order.items[0].price.currency,
+                            term: order.items[0].tags[0].list.find(i => i.descriptor.code === 'TERM')?.value,
+                            interestRate: order.items[0].tags[0].list.find(i => i.descriptor.code === 'INTEREST_RATE')?.value
+                        },
+                        paymentSchedule: order.payments,
+                        documents: order.documents,
+                        status: 'DISBURSED'
+                    });
+                    
+                    await Transaction.findOneAndUpdate(
+                        { transactionId: context.transaction_id },
+                        { status: 'LOAN_DISBURSED' }
+                    );
+                }
+                if (fulfillmentState === 'SANCTIONED') {
+                    await SanctionedLoan.create({
+                        transactionId: context.transaction_id,
+                        providerId: order.provider.id,
+                        loanDetails: {
+                            amount: order.items[0].price.value,
+                            currency: order.items[0].price.currency,
+                            term: order.items[0].tags[0].list.find(i => i.descriptor.code === 'TERM')?.value,
+                            interestRate: order.items[0].tags[0].list.find(i => i.descriptor.code === 'INTEREST_RATE')?.value
+                        },
+                        status: 'SANCTIONED'
+                    });
+        
+                    await Transaction.findOneAndUpdate(
+                        { transactionId: context.transaction_id },
+                        { status: 'LOAN_SANCTIONED' }
+                    );
+                }
                 return res.status(200).json({
                     message: 'Non-form status saved successfully'
                 });
