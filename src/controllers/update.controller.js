@@ -73,29 +73,29 @@ class UpdateController{
 
                 const updateResponse = await UpdateService.makeUpdateRequest(updatePayload);
                 
-                await Update.findOneAndUpdate(
-                    { transactionId: context.transaction_id },
-                    {
-                        $set: {
-                            providerId: message.order.provider.id,
-                            updatePayload: req.body,
-                            updateResponse: {
-                                messageId: context.message_id,
-                                timestamp: context.timestamp,
-                            },
-                            status: fulfillmentState,
-                            updateId: message.order.id,
-                            consentUpdatePayload: updatePayload,
-                            consentUpdateResponse: updateResponse,
-                            updatedAt: new Date()
-                        }
-                    },
-                    { 
-                        upsert: true, 
-                        new: true,
-                        setDefaultsOnInsert: true 
-                    }
-                );
+                // await Update.findOneAndUpdate(
+                //     { transactionId: context.transaction_id },
+                //     {
+                //         $set: {
+                //             providerId: message.order.provider.id,
+                //             updatePayload: req.body,
+                //             updateResponse: {
+                //                 messageId: context.message_id,
+                //                 timestamp: context.timestamp,
+                //             },
+                //             status: fulfillmentState,
+                //             updateId: message.order.id,
+                //             consentUpdatePayload: updatePayload,
+                //             consentUpdateResponse: updateResponse,
+                //             updatedAt: new Date()
+                //         }
+                //     },
+                //     { 
+                //         upsert: true, 
+                //         new: true,
+                //         setDefaultsOnInsert: true 
+                //     }
+                // );
             }
             if (fulfillmentState === 'DISBURSED') {
                 const loanInfo = message.order.items[0].tags[0].list;

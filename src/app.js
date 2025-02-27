@@ -1,6 +1,7 @@
 const express = require('express');
 const mongoose = require('mongoose');
 const { mongoURI } = require('./config/db.config');
+
 const cors = require('cors');
 const authRoutes = require('./routes/auth.routes');
 const searchRoutes = require('./routes/search.routes');
@@ -36,6 +37,14 @@ app.use(cors({
     allowedHeaders: ['Content-Type', 'Authorization'],
 }));
 app.options('*', cors());
+
+
+app.use((req, res, next) => {
+    const endpoint = req.path.replace('/', '');
+    // Blue text using ANSI escape code
+    console.log('\x1b[36m%s\x1b[0m', `→ ${endpoint}`);
+    next();
+});
 // Routes
 app.use('/api/auth', authRoutes);
 app.use('/api/search', searchRoutes);
