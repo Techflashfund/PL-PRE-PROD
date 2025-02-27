@@ -18,7 +18,7 @@ class UpdateController{
             // Save update response
             
 
-            await Update.create(updateData);
+            
 
             // If consent is required, create consent update payload
             if (fulfillmentState === 'CONSENT_REQUIRED') {
