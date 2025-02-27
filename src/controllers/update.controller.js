@@ -22,16 +22,26 @@ class UpdateController{
                 p.time?.label === 'FORECLOSURE' && p.url
             );
             if (foreclosurePayment) {
-                await ForeclosureLinks.create({
-                    transactionId: context.transaction_id,
-                    orderId: order.id,
-                    paymentUrl: foreclosurePayment.url,
-                    paymentDetails: {
-                        amount: foreclosurePayment.params.amount,
-                        currency: foreclosurePayment.params.currency,
-                        status: foreclosurePayment.status
+                await ForeclosureLinks.findOneAndUpdate(
+                    { transactionId: context.transaction_id },
+                    {
+                        $set: {
+                            orderId: order.id,
+                            paymentUrl: foreclosurePayment.url,
+                            paymentDetails: {
+                                amount: foreclosurePayment.params.amount,
+                                currency: foreclosurePayment.params.currency,
+                                status: foreclosurePayment.status
+                            },
+                            updatedAt: new Date()
+                        }
+                    },
+                    { 
+                        new: true, 
+                        upsert: true,
+                        setDefaultsOnInsert: true
                     }
-                });
+                );
             }
 
             

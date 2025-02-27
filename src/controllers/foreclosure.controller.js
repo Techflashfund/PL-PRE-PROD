@@ -38,20 +38,30 @@ class ForeclosureController {
             };
 
             const updateResponse = await UpdateService.makeUpdateRequest(foreclosurePayload);
-            await Foreclosure.create({
-                transactionId,
-                loanId: loan._id,
-                status: 'INITIATED',
-                requestDetails: {
-                    payload: foreclosurePayload,
-                    timestamp: new Date()
+            await Foreclosure.findOneAndUpdate(
+                { transactionId },
+                {
+                    $set: {
+                        loanId: loan._id,
+                        status: 'INITIATED',
+                        requestDetails: {
+                            payload: foreclosurePayload,
+                            timestamp: new Date()
+                        },
+                        responseDetails: {
+                            payload: updateResponse,
+                            timestamp: new Date()
+                        },
+                        initiatedBy: req.body.userId,
+                        updatedAt: new Date()
+                    }
                 },
-                responseDetails: {
-                    payload: updateResponse,
-                    timestamp: new Date()
-                },
-                initiatedBy: req.body.userId
-            });
+                { 
+                    new: true,
+                    upsert: true,
+                    setDefaultsOnInsert: true
+                }
+            );
             // Update loan status
            
 
