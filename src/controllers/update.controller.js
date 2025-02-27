@@ -16,18 +16,7 @@ class UpdateController{
             const fulfillmentState = order.fulfillments[0].state.descriptor.code;
 
             // Save update response
-            const updateData = {
-                transactionId: context.transaction_id,
-                providerId: message.order.provider.id,
-                updatePayload: req.body,
-                updateResponse: {
-                    messageId: context.message_id,
-                    timestamp: context.timestamp,
-                },
-                status: fulfillmentState,
-                updateId: message.order.id,
-                updateTimestamp: new Date()
-            };
+            
 
             await Update.create(updateData);
 
