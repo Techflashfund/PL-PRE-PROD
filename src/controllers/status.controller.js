@@ -23,59 +23,57 @@ class StatusController {
       console.log("Status request received:", req.body);
       await OnStatusLog.create({
         transactionId: context.transaction_id,
-        payload: req.body
-    });
+        payload: req.body,
+      });
       const { order } = message;
-      if (!order.items[0].xinput || !order.items[0].xinput.form) {
-        await NoFormStatus.create({
-          transactionId: context.transaction_id,
-          statusPayload: req.body,
-        });
+      
+        
         const fulfillmentState = order.fulfillments[0].state.descriptor.code;
         if (fulfillmentState === "DISBURSED") {
-            try {
-                const updatedLoan = await DisbursedLoan.findOneAndUpdate(
-                    { transactionId: context.transaction_id },
-                    {
-                        $set: {
-                            providerId: order.provider.id,
-                            loanDetails: {
-                                amount: order.items[0].price.value,
-                                currency: order.items[0].price.currency,
-                                term: order.items[0].tags[0].list.find(
-                                    (i) => i.descriptor.code === "TERM"
-                                )?.value,
-                                interestRate: order.items[0].tags[0].list.find(
-                                    (i) => i.descriptor.code === "INTEREST_RATE"
-                                )?.value,
-                            },
-                            paymentSchedule: order.payments,
-                            documents: order.documents,
-                            status: "DISBURSED",
-                            Response: req.body,
-                            updatedAt: new Date()
-                        }
-                    },
-                    { 
-                        new: true, 
-                        upsert: true,
-                        setDefaultsOnInsert: true 
-                    }
-                );
-        
-                console.log(`DisbursedLoan updated for transaction: ${context.transaction_id}`);
-                
-                // Update transaction status
-                await Transaction.findOneAndUpdate(
-                    { transactionId: context.transaction_id },
-                    { status: "LOAN_DISBURSED" },
-                    { new: true }
-                );
-        
-            } catch (error) {
-                console.error("Error updating disbursed loan:", error);
-                throw error;
-            }
+          try {
+            const updatedLoan = await DisbursedLoan.findOneAndUpdate(
+              { transactionId: context.transaction_id },
+              {
+                $set: {
+                  providerId: order.provider.id,
+                  loanDetails: {
+                    amount: order.items[0].price.value,
+                    currency: order.items[0].price.currency,
+                    term: order.items[0].tags[0].list.find(
+                      (i) => i.descriptor.code === "TERM"
+                    )?.value,
+                    interestRate: order.items[0].tags[0].list.find(
+                      (i) => i.descriptor.code === "INTEREST_RATE"
+                    )?.value,
+                  },
+                  paymentSchedule: order.payments,
+                  documents: order.documents,
+                  status: "DISBURSED",
+                  Response: req.body,
+                  updatedAt: new Date(),
+                },
+              },
+              {
+                new: true,
+                upsert: true,
+                setDefaultsOnInsert: true,
+              }
+            );
+
+            console.log(
+              `DisbursedLoan updated for transaction: ${context.transaction_id}`
+            );
+
+            // Update transaction status
+            await Transaction.findOneAndUpdate(
+              { transactionId: context.transaction_id },
+              { status: "LOAN_DISBURSED" },
+              { new: true }
+            );
+          } catch (error) {
+            console.error("Error updating disbursed loan:", error);
+            throw error;
+          }
         }
         if (fulfillmentState === "SANCTIONED") {
           await SanctionedLoan.create({
@@ -102,7 +100,7 @@ class StatusController {
         return res.status(200).json({
           message: "Non-form status saved successfully",
         });
-      }
+      
       const formId = message.order.items[0].xinput.form.id;
       const formResponse = message.order.items[0].xinput.form_response;
 
@@ -302,74 +300,71 @@ class StatusController {
   }
   static async checkLoanStatus(req, res) {
     try {
-        const { userId } = req.body;
+      const { userId } = req.body;
 
-        const transactions = await Transaction.find({
-            user: userId,
-           
+      const transactions = await Transaction.find({
+        user: userId,
+      });
+
+      if (!transactions.length) {
+        return res.status(404).json({
+          message: "No disbursed loans found",
         });
+      }
 
-        if (!transactions.length) {
-            return res.status(404).json({
-                message: "No disbursed loans found",
-            });
-        }
+      // Send status requests
+      await Promise.all(
+        transactions.map(async (transaction) => {
+          const loan = await DisbursedLoan.findOne({
+            transactionId: transaction.transactionId,
+          });
 
-        // Send status requests
-        await Promise.all(
-            transactions.map(async (transaction) => {
-                const loan = await DisbursedLoan.findOne({
-                    transactionId: transaction.transactionId,
-                });
+          if (!loan || !loan.Response) return null;
+          const { context } = loan.Response;
 
-                if (!loan || !loan.Response) return null;
-                const { context } = loan.Response;
+          const statusPayload = {
+            context: {
+              ...context,
+              action: "status",
+              message_id: uuidv4(),
+              timestamp: new Date().toISOString(),
+            },
+            message: {
+              ref_id: transaction.transactionId,
+            },
+          };
 
-                const statusPayload = {
-                    context: {
-                        ...context,
-                        action: "status",
-                        message_id: uuidv4(),
-                        timestamp: new Date().toISOString(),
-                    },
-                    message: {
-                        ref_id: transaction.transactionId,
-                    },
-                };
-                
-                const resss=await statusRequest(statusPayload);
-                console.log('woowww',resss);
-            })
-        );
+          const resss = await statusRequest(statusPayload);
+          console.log("woowww", resss);
+        })
+      );
 
-        // Wait for 5 seconds
-        await new Promise(resolve => setTimeout(resolve, 5000));
+      // Wait for 5 seconds
+      await new Promise((resolve) => setTimeout(resolve, 5000));
 
-        // Fetch updated loan details
-        const updatedLoans = await Promise.all(
-            transactions.map(async (transaction) => {
-                const loan = await DisbursedLoan.findOne({
-                    transactionId: transaction.transactionId,
-                });
-                
-                if (!loan) return null;
+      // Fetch updated loan details
+      const updatedLoans = await Promise.all(
+        transactions.map(async (transaction) => {
+          const loan = await DisbursedLoan.findOne({
+            transactionId: transaction.transactionId,
+          });
 
-                return loan.Response
-                
-            })
-        );
-        const validLoans = updatedLoans.filter(loan => loan !== null);
-        res.status(200).json({
-            message: "Loan status check completed",
-            totalLoans: validLoans.length,
-            loans: validLoans
-        });
+          if (!loan) return null;
 
+          return loan.Response;
+        })
+      );
+      const validLoans = updatedLoans.filter((loan) => loan !== null);
+      res.status(200).json({
+        message: "Loan status check completed",
+        totalLoans: validLoans.length,
+        loans: validLoans,
+      });
     } catch (error) {
-        console.error("Loan status check failed:", error);
-        res.status(500).json({ error: error.message });
+      console.error("Loan status check failed:", error);
+      res.status(500).json({ error: error.message });
     }
-}
+  }
 }
 
 module.exports = StatusController;
