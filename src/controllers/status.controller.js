@@ -97,9 +97,7 @@ class StatusController {
             { status: "LOAN_SANCTIONED" }
           );
         }
-        return res.status(200).json({
-          message: "Non-form status saved successfully",
-        });
+       
       
       const formId = message.order.items[0].xinput.form.id;
       const formResponse = message.order.items[0].xinput.form_response;
