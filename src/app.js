@@ -80,6 +80,7 @@ console.log("Using MongoDB URI:", mongoURI);
 mongoose.connect(mongoURI, {
     useNewUrlParser: true,
     useUnifiedTopology: true,
+    useFindAndModify: false
 })
 .then(() => console.log('Connected to MongoDB'))
 .catch(err => console.error('MongoDB connection error:', err));
