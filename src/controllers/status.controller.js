@@ -33,36 +33,49 @@ class StatusController {
         });
         const fulfillmentState = order.fulfillments[0].state.descriptor.code;
         if (fulfillmentState === "DISBURSED") {
-          // Find and update or create new
-          await DisbursedLoan.findOneAndUpdate(
-            { transactionId: context.transaction_id },
-            {
-              $set: {
-                providerId: order.provider.id,
-                loanDetails: {
-                  amount: order.items[0].price.value,
-                  currency: order.items[0].price.currency,
-                  term: order.items[0].tags[0].list.find(
-                    (i) => i.descriptor.code === "TERM"
-                  )?.value,
-                  interestRate: order.items[0].tags[0].list.find(
-                    (i) => i.descriptor.code === "INTEREST_RATE"
-                  )?.value,
-                },
-                paymentSchedule: order.payments,
-                documents: order.documents,
-                status: "DISBURSED",
-                Response: req.body, // Store complete response
-                updatedAt: new Date(),
-              },
-            },
-            { upsert: true, new: true }
-          );
-
-          await Transaction.findOneAndUpdate(
-            { transactionId: context.transaction_id },
-            { status: "LOAN_DISBURSED" }
-          );
+            try {
+                const updatedLoan = await DisbursedLoan.findOneAndUpdate(
+                    { transactionId: context.transaction_id },
+                    {
+                        $set: {
+                            providerId: order.provider.id,
+                            loanDetails: {
+                                amount: order.items[0].price.value,
+                                currency: order.items[0].price.currency,
+                                term: order.items[0].tags[0].list.find(
+                                    (i) => i.descriptor.code === "TERM"
+                                )?.value,
+                                interestRate: order.items[0].tags[0].list.find(
+                                    (i) => i.descriptor.code === "INTEREST_RATE"
+                                )?.value,
+                            },
+                            paymentSchedule: order.payments,
+                            documents: order.documents,
+                            status: "DISBURSED",
+                            Response: req.body,
+                            updatedAt: new Date()
+                        }
+                    },
+                    { 
+                        new: true, 
+                        upsert: true,
+                        setDefaultsOnInsert: true 
+                    }
+                );
+        
+                console.log(`DisbursedLoan updated for transaction: ${context.transaction_id}`);
+                
+                // Update transaction status
+                await Transaction.findOneAndUpdate(
+                    { transactionId: context.transaction_id },
+                    { status: "LOAN_DISBURSED" },
+                    { new: true }
+                );
+        
+            } catch (error) {
+                console.error("Error updating disbursed loan:", error);
+                throw error;
+            }
         }
         if (fulfillmentState === "SANCTIONED") {
           await SanctionedLoan.create({
