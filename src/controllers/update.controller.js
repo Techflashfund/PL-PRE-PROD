@@ -4,6 +4,8 @@ const Transaction = require('../models/transaction.model'); // Import the Transa
 const UpdateService = require('../services/update.services'); // Import the Update service
 const DisbursedLoan = require('../models/disbursed.model');
 const ForeclosureLinks = require('../models/forclosurelink.model');
+const CompletedLoan = require('../models/completed.model');
+
 
 class UpdateController{
     static async update(req,res){
@@ -112,61 +114,94 @@ class UpdateController{
                 //     }
                 // );
             }
-           
-            if (fulfillmentState === 'DISBURSED') {
-                const loanInfo = message.order.items[0].tags[0].list;
-                const breakup = message.order.quote.breakup;
-            
-                await DisbursedLoan.create({
-                    transactionId: context.transaction_id,
-                    providerId: message.order.provider.id,
-                    loanDetails: {
-                        amount: message.order.items[0].price.value,
-                        currency: message.order.items[0].price.currency,
-                        interestRate: loanInfo.find(i => i.descriptor.code === 'INTEREST_RATE')?.value,
-                        term: loanInfo.find(i => i.descriptor.code === 'TERM')?.value,
-                        repaymentFrequency: loanInfo.find(i => i.descriptor.code === 'REPAYMENT_FREQUENCY')?.value,
-                        totalInstallments: loanInfo.find(i => i.descriptor.code === 'NUMBER_OF_INSTALLMENTS_OF_REPAYMENT')?.value
+            if (fulfillmentState === 'COMPLETE') {
+                await CompletedLoan.findOneAndUpdate(
+                    { transactionId: context.transaction_id },
+                    {
+                        $set: {
+                            providerId: order.provider.id,
+                            loanDetails: {
+                                amount: order.items[0].price.value,
+                                currency: order.items[0].price.currency,
+                                term: order.items[0].tags[0].list.find(
+                                    (i) => i.descriptor.code === "TERM"
+                                )?.value,
+                                interestRate: order.items[0].tags[0].list.find(
+                                    (i) => i.descriptor.code === "INTEREST_RATE"
+                                )?.value
+                            },
+                            Response: req.body,
+                            completionDate: new Date()
+                        }
                     },
-                    breakdown: {
-                        principal: breakup.find(b => b.title === 'PRINCIPAL')?.price.value,
-                        interest: breakup.find(b => b.title === 'INTEREST')?.price.value,
-                        processingFee: breakup.find(b => b.title === 'PROCESSING_FEE')?.price.value,
-                        insuranceCharges: breakup.find(b => b.title === 'INSURANCE_CHARGES')?.price.value,
-                        netDisbursedAmount: breakup.find(b => b.title === 'NET_DISBURSED_AMOUNT')?.price.value,
-                        outstandingPrincipal: breakup.find(b => b.title === 'OUTSTANDING_PRINCIPAL')?.price.value,
-                        outstandingInterest: breakup.find(b => b.title === 'OUTSTANDING_INTEREST')?.price.value
-                    },
-                    customerDetails: {
-                        name: message.order.fulfillments[0].customer.person.name,
-                        phone: message.order.fulfillments[0].customer.contact.phone,
-                        email: message.order.fulfillments[0].customer.contact.email
-                    },
-                    paymentSchedule: message.order.payments
-                        .filter(p => p.type === 'POST_FULFILLMENT')
-                        .map(p => ({
-                            installmentId: p.id,
-                            amount: p.params.amount,
-                            currency: p.params.currency,
-                            startDate: p.time.range.start,
-                            endDate: p.time.range.end,
-                            status: p.status
-                        })),
-                    documents: message.order.documents.map(doc => ({
-                        code: doc.descriptor.code,
-                        name: doc.descriptor.name,
-                        description: doc.descriptor.long_desc,
-                        url: doc.url,
-                        mimeType: doc.mime_type
-                    })),
-                    Response:req.body
-                });
+                    { 
+                        new: true, 
+                        upsert: true,
+                        setDefaultsOnInsert: true
+                    }
+                );
             
                 await Transaction.findOneAndUpdate(
                     { transactionId: context.transaction_id },
-                    { status: 'LOAN_DISBURSED' }
+                    { status: 'LOAN_COMPLETED' },
+                    { new: true }
                 );
             }
+           
+            // if (fulfillmentState === 'DISBURSED') {
+            //     const loanInfo = message.order.items[0].tags[0].list;
+            //     const breakup = message.order.quote.breakup;
+            
+            //     await DisbursedLoan.create({
+            //         transactionId: context.transaction_id,
+            //         providerId: message.order.provider.id,
+            //         loanDetails: {
+            //             amount: message.order.items[0].price.value,
+            //             currency: message.order.items[0].price.currency,
+            //             interestRate: loanInfo.find(i => i.descriptor.code === 'INTEREST_RATE')?.value,
+            //             term: loanInfo.find(i => i.descriptor.code === 'TERM')?.value,
+            //             repaymentFrequency: loanInfo.find(i => i.descriptor.code === 'REPAYMENT_FREQUENCY')?.value,
+            //             totalInstallments: loanInfo.find(i => i.descriptor.code === 'NUMBER_OF_INSTALLMENTS_OF_REPAYMENT')?.value
+            //         },
+            //         breakdown: {
+            //             principal: breakup.find(b => b.title === 'PRINCIPAL')?.price.value,
+            //             interest: breakup.find(b => b.title === 'INTEREST')?.price.value,
+            //             processingFee: breakup.find(b => b.title === 'PROCESSING_FEE')?.price.value,
+            //             insuranceCharges: breakup.find(b => b.title === 'INSURANCE_CHARGES')?.price.value,
+            //             netDisbursedAmount: breakup.find(b => b.title === 'NET_DISBURSED_AMOUNT')?.price.value,
+            //             outstandingPrincipal: breakup.find(b => b.title === 'OUTSTANDING_PRINCIPAL')?.price.value,
+            //             outstandingInterest: breakup.find(b => b.title === 'OUTSTANDING_INTEREST')?.price.value
+            //         },
+            //         customerDetails: {
+            //             name: message.order.fulfillments[0].customer.person.name,
+            //             phone: message.order.fulfillments[0].customer.contact.phone,
+            //             email: message.order.fulfillments[0].customer.contact.email
+            //         },
+            //         paymentSchedule: message.order.payments
+            //             .filter(p => p.type === 'POST_FULFILLMENT')
+            //             .map(p => ({
+            //                 installmentId: p.id,
+            //                 amount: p.params.amount,
+            //                 currency: p.params.currency,
+            //                 startDate: p.time.range.start,
+            //                 endDate: p.time.range.end,
+            //                 status: p.status
+            //             })),
+            //         documents: message.order.documents.map(doc => ({
+            //             code: doc.descriptor.code,
+            //             name: doc.descriptor.name,
+            //             description: doc.descriptor.long_desc,
+            //             url: doc.url,
+            //             mimeType: doc.mime_type
+            //         })),
+            //         Response:req.body
+            //     });
+            
+            //     await Transaction.findOneAndUpdate(
+            //         { transactionId: context.transaction_id },
+            //         { status: 'LOAN_DISBURSED' }
+            //     );
+            // }
 
             res.status(200).json({ message: 'Update processed successfully' });
 
