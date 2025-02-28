@@ -343,27 +343,52 @@ class StatusController {
   static async checkLoanStatus(req, res) {
     try {
       const { userId } = req.body;
-
+  
+      // Fetch all transactions for the user
       const transactions = await Transaction.find({
         user: userId,
       });
-
+  
       if (!transactions.length) {
         return res.status(404).json({
-          message: "No disbursed loans found",
+          message: "No transactions found for this user",
         });
       }
-
-      // Send status requests
-      await Promise.all(
-        transactions.map(async (transaction) => {
-          const loan = await DisbursedLoan.findOne({
-            transactionId: transaction.transactionId,
+  
+      // Track transactions in both collections and those only in transactions
+      const validTransactions = [];
+      const rejectedTransactions = [];
+  
+      // Check which transactions exist in DisbursedLoans
+      for (const transaction of transactions) {
+        const loan = await DisbursedLoan.findOne({
+          transactionId: transaction.transactionId,
+        });
+  
+        if (loan && loan.Response) {
+          // Transaction exists in both collections
+          validTransactions.push({
+            transaction,
+            loan
           });
-
-          if (!loan || !loan.Response) return null;
+        } else {
+          // Transaction exists only in Transaction collection
+          rejectedTransactions.push(transaction);
+        }
+      }
+  
+      if (!validTransactions.length) {
+        return res.status(404).json({
+          message: "No disbursed loans found that match transactions",
+          rejectedTransactions: rejectedTransactions.map(t => t.transactionId)
+        });
+      }
+  
+      // Send status requests only for valid transactions
+      await Promise.all(
+        validTransactions.map(async ({ transaction, loan }) => {
           const { context } = loan.Response;
-
+  
           const statusPayload = {
             context: {
               ...context,
@@ -375,32 +400,39 @@ class StatusController {
               ref_id: transaction.transactionId,
             },
           };
-
+  
           const resss = await statusRequest(statusPayload);
           console.log("woowww", resss);
         })
       );
-
+  
       // Wait for 5 seconds
       await new Promise((resolve) => setTimeout(resolve, 5000));
-
+  
       // Fetch updated loan details
       const updatedLoans = await Promise.all(
-        transactions.map(async (transaction) => {
+        validTransactions.map(async ({ transaction }) => {
           const loan = await DisbursedLoan.findOne({
             transactionId: transaction.transactionId,
           });
-
+  
           if (!loan) return null;
-
-          return loan.Response;
+  
+          return {
+            transactionId: transaction.transactionId,
+            response: loan.Response
+          };
         })
       );
-      const validLoans = updatedLoans.filter((loan) => loan !== null);
+  
+      const finalLoans = updatedLoans.filter((loan) => loan !== null);
+      
       res.status(200).json({
         message: "Loan status check completed",
-        totalLoans: validLoans.length,
-        loans: validLoans,
+        totalLoans: finalLoans.length,
+        rejectedTransactions: rejectedTransactions.length > 0 ? 
+          rejectedTransactions.map(t => t.transactionId) : [],
+        loans: finalLoans,
       });
     } catch (error) {
       console.error("Loan status check failed:", error);
