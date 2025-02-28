@@ -439,6 +439,36 @@ class StatusController {
       res.status(500).json({ error: error.message });
     }
   }
+  static async checkDisbursalStatus(req, res) {
+    try {
+        const { transactionId } = req.body;
+
+        if (!transactionId) {
+            return res.status(400).json({
+                message: "Transaction ID is required"
+            });
+        }
+
+        const disbursedLoan = await DisbursedLoan.findOne({ transactionId });
+
+        if (!disbursedLoan) {
+            return res.status(404).json({
+                message: "No disbursed loan found for this transaction"
+            });
+        }
+
+        res.status(200).json({
+            message: "Disbursed loan found",
+            loan: disbursedLoan.Response
+        });
+
+    } catch (error) {
+        console.error("Disbursal status check failed:", error);
+        res.status(500).json({ error: error.message });
+    }
+}
+
+
 }
 
 module.exports = StatusController;

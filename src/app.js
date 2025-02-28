@@ -23,6 +23,7 @@ const docstatusRoutes=require('./routes/docstatus.routes')
 const nostatsRoutes=require('./routes/noform.routes')
 const forclosureRoutes=require('./routes/forclosure.routes');
 const checkLoanStatus = require('./routes/checkloanstatus.routes');
+const checDisbursalStatus = require('./routes/disbursal.routes');
 const app = express();
 
 // Middleware
@@ -71,6 +72,7 @@ app.use('/document-status',docstatusRoutes)
 app.use('/noform-status',nostatsRoutes)
 app.use('/foreclosure',forclosureRoutes)
 app.use('/check-loan-status',checkLoanStatus)
+app.use('/check-disbursal-status',checDisbursalStatus)
 app.get('/api/test', (req, res) => {
     res.json({ message: 'CORS is working!' });
 });
