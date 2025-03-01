@@ -105,6 +105,8 @@ class SearchController {
             );
 
             const formresponse = await submitToExternalForm(transaction.user, context.transaction_id, formData.url);
+            console.log('Form submission response:', formresponse.formUrl,formresponse.submissionId);
+            
             
             if (!formresponse.submissionId) {
                 return res.status(500).json({ error: 'Form submission failed' });
