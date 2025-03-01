@@ -8,6 +8,8 @@ const { submitToExternalForm } = require('../services/formsubmission.services');
 const SelectRequestHandler = require('../services/select.services');
 const SelectPayloadHandler = require('../utils/select.request.utils');
 const SelectOne = require('../models/selectone.nodel');
+const SearchIds = require('../models/searchids.model');
+const SelectIds = require('../models/selectids.model');
 class SearchController {
     static async searchRequest(req, res) {
         try {
@@ -27,6 +29,11 @@ class SearchController {
                 messageId,
                 user: userId,
                 requestBody
+            });
+            await SearchIds.create({
+                transactionId,
+                messageId,
+                type: 'SEARCH'
             });
             
             res.json(response);
@@ -128,7 +135,12 @@ class SearchController {
 
             const selectPayload = await SelectPayloadHandler.createSelectonePayload(req.body, formresponse.submissionId);
             const selectResponse = await SelectRequestHandler.selectRequest(selectPayload);
-            
+            await SelectIds.create({
+                transactionId: context.transaction_id,
+                messageId: selectPayload.context.message_id,
+                type: 'SELECT_1',
+                
+            });
             await SelectOne.create({
                 transactionId: context.transaction_id,
                 providerId: provider.id,

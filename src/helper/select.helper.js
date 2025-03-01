@@ -3,9 +3,10 @@ const Transaction = require("../models/transaction.model");
  const SelectTwo=require("../models/selecttwo.model");
  const SelectThree = require('../models/selectThree.model');
 const SelectPayloadHandler = require("../utils/select.request.utils");
-const { selectRequest } = require("../services/select.services");
+const { selectRequest } = require("../services/select.services")
+const SelectIds = require('../models/selectids.model');
  class Selecthepler{
-    static  getPayloadType(payload){
+    static   getPayloadType(payload){
  
     console.log('payyload',payload.message,payload.context.bpp_id);
     const formDetails = payload.message?.order?.items?.[0]?.xinput;
@@ -71,7 +72,13 @@ const { selectRequest } = require("../services/select.services");
 
             const selectPayload=await  SelectPayloadHandler.createSelecttwoPayload(payload); 
             const selectResponse=await selectRequest(selectPayload);
-            log.info('SelectTwo response:', selectResponse);
+            await SelectIds.create({
+                transactionId: payload.context.transaction_id,
+                messageId: selectPayload.context.message_id,
+                type: 'SELECT_2',
+                
+            });
+            console.log('SelectTwo response:', selectResponse);
             
             await SelectTwo.create({
                 transactionId: payload.context.transaction_id,

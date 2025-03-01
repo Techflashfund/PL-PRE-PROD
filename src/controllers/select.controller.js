@@ -2,7 +2,8 @@ const Transaction = require("../models/transaction.model");
 const SelectRequestHandler = require("../services/select.services");
 const SelectOne = require("../models/selectone.nodel");
 const SelectHelper = require("../helper/select.helper");
-const TempData = require('../models/tempdata')
+const TempData = require('../models/tempdata');
+const { getPayloadType } = require("../handler/selectpayloadfounder");
 
 class SelectController {
   static async makeSelect(req, res) {
@@ -60,7 +61,7 @@ class SelectController {
           .status(400)
           .json({ error: "Invalid select response format" });
       }
-      const payloadType = SelectHelper.getPayloadType(req.body);
+      const payloadType =await getPayloadType(req.body);
        console.log('Payload Type:', payloadType);
        
       if (!payloadType) {

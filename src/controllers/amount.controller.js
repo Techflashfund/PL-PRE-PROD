@@ -6,6 +6,8 @@ const SelectThree = require('../models/selectThree.model');
 const FormSubmissionServicetwo = require('../services/formsubmissiontwo.services');
 const Transaction = require('../models/transaction.model');
 const { selectRequest } = require('../services/select.services');
+const SelectIds = require('../models/selectids.model');
+
 
 
 class AmountController {
@@ -65,6 +67,12 @@ class AmountController {
 
         const selectPayload =await SelectPayloadHandler.createSelecthreePayload(selectTwo, submissionId);
         const selectResponse = await selectRequest(selectPayload);
+         await SelectIds.create({
+                        transactionId: payload.context.transaction_id,
+                        messageId: selectPayload.context.message_id,
+                        type: 'SELECT_3',
+                        
+                    });
         
         await SelectThree.create({
             transactionId,
