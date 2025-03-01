@@ -227,7 +227,7 @@ class FormSubmissionService {
                     return {
                         success: true,
                         formUrl: orgformUrl,
-                        submissionId: 'retry-success',
+                        submissionId: retryResponse.data.submission_id,
                         response: retryResponse.data
                     };
                 }
