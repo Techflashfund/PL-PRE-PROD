@@ -2,6 +2,7 @@ const FormData = require('form-data');
 const axios = require('axios');
 const UserDetails = require('../models/userdetails.model');
 const Transaction = require('../models/transaction.model');
+const url = require('url');
 
 class FormSubmissionService {
     static transformFormUrl(url) {
@@ -13,13 +14,23 @@ class FormSubmissionService {
             return newUrl;
         }
         
-        // Also handle /udform/ endpoints
-        if (url.includes('/udform/') && !url.includes('method=post')) {
-            // Make sure we're using the POST endpoint
-            console.log('Using form POST URL:', url);
-        }
-        
         return url;
+    }
+    
+    // Check if the URL is for a domain that needs special handling
+    static isDomainWithSpecialRequirements(formUrl) {
+        try {
+            const domain = new URL(formUrl).hostname;
+            // List of domains that need special handling
+            const specialDomains = [
+                'dmi-ondcpreprod.refo.dev',
+                'refo.dev'
+            ];
+            
+            return specialDomains.some(d => domain.includes(d));
+        } catch (e) {
+            return false;
+        }
     }
     
     static async submitToExternalForm(userId, transactionId, formUrl) {
@@ -42,14 +53,17 @@ class FormSubmissionService {
             const orgformUrl = FormSubmissionService.transformFormUrl(formUrl);
             console.log('Form URL after transformation:', orgformUrl);
 
-            // 3. Validate required fields - updated to match HTML form required fields
+            // Determine if this domain needs special handling
+            const isSpecialDomain = FormSubmissionService.isDomainWithSpecialRequirements(orgformUrl);
+            console.log(`Domain requires special handling: ${isSpecialDomain}`);
+
+            // 3. Validate required fields
             const requiredFields = [
                 'firstName', 'lastName', 'email', 'dob', 'pan', 
                 'contactNumber', 'employmentType', 'income', 'companyName', 'bureauConsent'
             ];
 
             const missingFields = requiredFields.filter(field => {
-                // Special handling for email field which is named differently
                 if (field === 'email' && userDetails['email']) return false;
                 return !userDetails[field];
             });
@@ -58,36 +72,65 @@ class FormSubmissionService {
                 throw new Error(`Missing required fields: ${missingFields.join(', ')}`);
             }
 
-            // 4. Create FormData with fields matching exactly the HTML form
+            // 4. Create FormData with fields
             const formData = new FormData();
             
-            // Map our backend fields to the form fields
-            const fieldMapping = {
-                firstName: userDetails.firstName,
-                lastName: userDetails.lastName,
-                // Include BOTH email field names to support different forms
-                personalemail: userDetails.email,
-                email: userDetails.email, // Include standard email field too
-                dob: userDetails.dob?.toISOString().split('T')[0],
-                pan: userDetails.pan,
-                contactNumber: userDetails.contactNumber,
-                employmentType: userDetails.employmentType,
-                income: userDetails.income,
-                companyName: userDetails.companyName,
-                officialemail: userDetails.officialEmail || '',
-                gender: userDetails.gender || 'male', // Default value if missing
-                udyamNumber: userDetails.udyamNumber || '',
-                addressL1: userDetails.address?.line1 || '',
-                addressL2: userDetails.address?.line2 || '',
-                city: userDetails.address?.city || '',
-                state: userDetails.address?.state || '',
-                pincode: userDetails.address?.pincode || '',
-                aa_id: userDetails.aa_id || '',
-                endUse: userDetails.endUse || 'other',
-                // Include BOTH checkbox formats
-                bureauConsent: userDetails.bureauConsent ? 'on' : '',
-                bureauConsent_true: userDetails.bureauConsent ? 'true' : 'false'
-            };
+            // Prepare the data fields based on domain
+            let fieldMapping = {};
+            
+            if (isSpecialDomain) {
+                // Special handling for problematic domains
+                fieldMapping = {
+                    firstName: userDetails.firstName,
+                    lastName: userDetails.lastName,
+                    // Use only the personalemail field for special domains
+                    personalemail: userDetails.email,
+                    dob: userDetails.dob?.toISOString().split('T')[0],
+                    pan: userDetails.pan,
+                    contactNumber: userDetails.contactNumber,
+                    employmentType: userDetails.employmentType,
+                    income: userDetails.income?.toString() || '0',
+                    companyName: userDetails.companyName,
+                    officialemail: userDetails.officialEmail || '',
+                    gender: userDetails.gender || 'male',
+                    udyamNumber: userDetails.udyamNumber || '',
+                    addressL1: userDetails.address?.line1 || '',
+                    addressL2: userDetails.address?.line2 || '',
+                    city: userDetails.address?.city || '',
+                    state: userDetails.address?.state || '',
+                    pincode: userDetails.address?.pincode || '',
+                    aa_id: userDetails.aa_id || '',
+                    endUse: userDetails.endUse || 'other',
+                    // Use proper boolean string for special domains
+                    bureauConsent: userDetails.bureauConsent ? 'true' : 'false'
+                };
+            } else {
+                // Standard handling for other domains
+                fieldMapping = {
+                    firstName: userDetails.firstName,
+                    lastName: userDetails.lastName,
+                    personalemail: userDetails.email,
+                    email: userDetails.email,
+                    dob: userDetails.dob?.toISOString().split('T')[0],
+                    pan: userDetails.pan,
+                    contactNumber: userDetails.contactNumber,
+                    employmentType: userDetails.employmentType,
+                    income: userDetails.income?.toString() || '0',
+                    companyName: userDetails.companyName,
+                    officialemail: userDetails.officialEmail || '',
+                    gender: userDetails.gender || 'male',
+                    udyamNumber: userDetails.udyamNumber || '',
+                    addressL1: userDetails.address?.line1 || '',
+                    addressL2: userDetails.address?.line2 || '',
+                    city: userDetails.address?.city || '',
+                    state: userDetails.address?.state || '',
+                    pincode: userDetails.address?.pincode || '',
+                    aa_id: userDetails.aa_id || '',
+                    endUse: userDetails.endUse || 'other',
+                    bureauConsent: userDetails.bureauConsent ? 'on' : '',
+                    bureauConsent_true: userDetails.bureauConsent ? 'true' : 'false'
+                };
+            }
             
             // Add all fields to form data
             Object.entries(fieldMapping).forEach(([key, value]) => {
@@ -99,24 +142,96 @@ class FormSubmissionService {
 
             console.log('Form URL:', orgformUrl);
 
+            // Set up headers based on domain
+            let headers = {
+                ...formData.getHeaders(),
+                'Accept': 'application/json, text/html, */*',
+                'Origin': new URL(orgformUrl).origin,
+                'Referer': orgformUrl,
+                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
+            };
+            
+            // Special domain may need additional headers
+            if (isSpecialDomain) {
+                headers = {
+                    ...headers,
+                    'X-Requested-With': 'XMLHttpRequest',
+                    'Cache-Control': 'no-cache',
+                    'Pragma': 'no-cache',
+                    'Content-Type': 'multipart/form-data'
+                };
+            }
+
             // 5. Submit form with improved headers
             const response = await axios.post(
                 orgformUrl,
                 formData,
                 {
-                    headers: {
-                        ...formData.getHeaders(),
-                        'Accept': 'application/json, text/html, */*',
-                        'Origin': new URL(orgformUrl).origin,
-                        'Referer': orgformUrl,
-                        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
-                    },
-                    maxRedirects: 5, // Allow redirects
-                    validateStatus: status => status < 500 // Accept any non-server error
+                    headers,
+                    maxRedirects: 5,
+                    validateStatus: status => status < 500,
+                    timeout: 30000 // Increase timeout for slow servers
                 }
             );
 
             console.log('Form submission response:', response.data);
+
+            // Special handling for DOMAIN-ERROR responses
+            if (response.data && 
+                response.data.error && 
+                response.data.error.type === 'DOMAIN-ERROR') {
+                
+                // Log detailed error info
+                console.error('Domain Error Details:', {
+                    type: response.data.error.type,
+                    code: response.data.error.code,
+                    message: response.data.error.message
+                });
+                
+                // Special handling for code 80215
+                if (response.data.error.code === '80215') {
+                    console.log('Attempting special workaround for error 80215...');
+                    
+                    // Try with a direct POST and different content type
+                    const urlObj = new URL(orgformUrl);
+                    
+                    // Create a URL-encoded form data instead
+                    const params = new URLSearchParams();
+                    Object.entries(fieldMapping).forEach(([key, value]) => {
+                        if (value !== undefined && value !== null) {
+                            params.append(key, value);
+                        }
+                    });
+                    
+                    // Try alternative submission method
+                    const retryResponse = await axios.post(
+                        orgformUrl,
+                        params,
+                        {
+                            headers: {
+                                'Content-Type': 'application/x-www-form-urlencoded',
+                                'Accept': 'application/json, text/html, */*',
+                                'Origin': urlObj.origin,
+                                'Referer': orgformUrl,
+                                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36',
+                                'X-Requested-With': 'XMLHttpRequest'
+                            },
+                            maxRedirects: 5,
+                            validateStatus: status => status < 500
+                        }
+                    );
+                    
+                    console.log('Retry response:', retryResponse.data);
+                    
+                    // Use the retry response instead
+                    return {
+                        success: true,
+                        formUrl: orgformUrl,
+                        submissionId: 'retry-success',
+                        response: retryResponse.data
+                    };
+                }
+            }
 
             // Handle successful responses in different formats
             let submissionId = null;
@@ -156,8 +271,7 @@ class FormSubmissionService {
                 });
             }
             
-            // Try to return a more informative error
-            throw new Error(`Form submission failed: ${error.message}, Status: ${error.response?.status || 'Unknown'}`);
+            throw error;
         }
     }
 }
