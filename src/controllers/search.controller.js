@@ -106,7 +106,7 @@ class SearchController {
 
             const formresponse = await submitToExternalForm(transaction.user, context.transaction_id, formData.url);
             console.log('Form submission response:', formresponse.formUrl,formresponse.submissionId);
-            console.log('Form submission response:', formresponse);
+            console.log('Form submission response:', formresponse.response.message);
             
             
             
