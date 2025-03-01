@@ -19,7 +19,7 @@ const { selectRequest } = require("../services/select.services");
     if (!formDetails) {
       return null;
     }
-  console.log('yoooobroo',formDetails.form_response?.status);
+  
   
     // Check for initial form (type 1)
     if (
@@ -71,6 +71,7 @@ const { selectRequest } = require("../services/select.services");
 
             const selectPayload=await  SelectPayloadHandler.createSelecttwoPayload(payload); 
             const selectResponse=await selectRequest(selectPayload);
+            log.info('SelectTwo response:', selectResponse);
             
             await SelectTwo.create({
                 transactionId: payload.context.transaction_id,
@@ -88,6 +89,8 @@ const { selectRequest } = require("../services/select.services");
             );
         
     } catch (error) {
+        console.log('Handle onselect initial form failed:', error);
+        throw error;
         
     }
   }
