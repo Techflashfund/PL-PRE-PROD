@@ -14,8 +14,13 @@ class OffersController {
             if (!selectTwoRecords.length) {
                 return res.status(404).json({ error: 'No offers found' });
             }
+            const validRecords = selectTwoRecords.filter(record => record.onselectRequest);
 
-            const offers = selectTwoRecords.map(record => ({
+            if (!validRecords.length) {
+                return res.status(404).json({ error: 'No valid offers found' });
+            }
+
+            const offers = validRecords.map(record => ({
                 lenderId: record.onselectRequest.message.order.provider.id,
                 lenderName: record.onselectRequest.message.order.provider.descriptor.name,
                 loanAmount: record.loanOffer.amount.value,
