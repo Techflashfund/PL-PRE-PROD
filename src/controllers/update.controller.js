@@ -5,6 +5,7 @@ const UpdateService = require('../services/update.services'); // Import the Upda
 const DisbursedLoan = require('../models/disbursed.model');
 const ForeclosureLinks = require('../models/forclosurelink.model');
 const CompletedLoan = require('../models/completed.model');
+const TempData = require('../models/tempdata');
 
 
 class UpdateController{
@@ -15,6 +16,12 @@ class UpdateController{
 
     static async onupdate(req, res) {
         try {
+            const tempData = await TempData.create({
+                        transactionId: req.body.context?.transaction_id,
+                        messageId: req.body.context?.message_id,
+                        responseData: req.body,
+                        
+                    });
             const { context, message } = req.body;
             const { order } = message;
             const fulfillmentState = order.fulfillments[0].state.descriptor.code;
