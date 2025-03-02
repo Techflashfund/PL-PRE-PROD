@@ -1,7 +1,18 @@
 const { v4: uuidv4 } = require('uuid');
+const InitMessageIds = require('../models/initmessage.model');
+
 
 class InitRequestUtils {
     static async createInitOnePayload(selectThree,kycSubmissionId) {
+        const messageId = uuidv4();
+
+        // Save init message details
+        await InitMessageIds.create({
+            transactionId: selectThree.transactionId,
+            messageId: messageId,
+            type: 'INIT_1',
+            status: 'no'
+        });
         return {
             context: {
                 domain: "ONDC:FIS12",
@@ -16,7 +27,7 @@ class InitRequestUtils {
                 bpp_id: selectThree.onselectRequest.context.bpp_id,
                 bpp_uri: selectThree.onselectRequest.context.bpp_uri,
                 transaction_id: selectThree.transactionId,
-                message_id: uuidv4(),
+                message_id: messageId,
                 ttl: "PT10M",
                 timestamp: new Date().toISOString()
             },
@@ -117,6 +128,16 @@ class InitRequestUtils {
     }
 
     static async createInitTwoPayload(initOne, bankDetailsSubmissionId,formId) {
+        const messageId = uuidv4();
+
+        // Save init message details
+        await InitMessageIds.create({
+            transactionId: initOne.transactionId,
+            messageId: messageId,
+            type: 'INIT_2',
+            status: 'no'
+        });
+    
         return {
             context: {
                 domain: "ONDC:FIS12",
@@ -131,7 +152,7 @@ class InitRequestUtils {
                 bpp_id: initOne.initPayload.context.bpp_id,
                 bpp_uri: initOne.initPayload.context.bpp_uri,
                 transaction_id: initOne.transactionId,
-                message_id: uuidv4(),
+                message_id: messageId,
                 ttl: "PT10M",
                 timestamp: new Date().toISOString()
             },
@@ -210,6 +231,15 @@ class InitRequestUtils {
         };
     }
     static async createInitThreePayload(initTwo, submissionId,formId) {
+        const messageId = uuidv4();
+
+    // Save init message details
+    await InitMessageIds.create({
+        transactionId: initOne.transactionId,
+        messageId: messageId,
+        type: 'INIT_3',
+        status: 'no'
+    });
         return {
             context: {
                 domain: "ONDC:FIS12",
@@ -224,7 +254,7 @@ class InitRequestUtils {
                 bpp_id: initTwo.initPayload.context.bpp_id,
                 bpp_uri: initTwo.initPayload.context.bpp_uri,
                 transaction_id: initTwo.transactionId,
-                message_id: uuidv4(),
+                message_id: messageId,
                 ttl: "PT10M",
                 timestamp: new Date().toISOString()
             },

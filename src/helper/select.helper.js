@@ -5,6 +5,7 @@ const Transaction = require("../models/transaction.model");
 const SelectPayloadHandler = require("../utils/select.request.utils");
 const { selectRequest } = require("../services/select.services")
 const SelectIds = require('../models/selectids.model');
+const FormIds = require('../models/formids.model');
  class Selecthepler{
     static   getPayloadType(payload){
  
@@ -196,6 +197,12 @@ static async handleOnselectKYC(payload) {
         },
         { new: true }
     );
+    await FormIds.create({
+        transactionId: payload.context.transaction_id,
+        formId: formDetails.form.id,
+        type: 'KYC',
+        status: 'no'
+    });
     await Transaction.findOneAndUpdate(
         { transactionId: payload.context.transaction_id },
         { status: 'SELECTHREE_COMPLETED' }
