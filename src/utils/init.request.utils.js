@@ -235,7 +235,7 @@ class InitRequestUtils {
 
     // Save init message details
     await InitMessageIds.create({
-        transactionId: initOne.transactionId,
+        transactionId: initTwo.transactionId,
         messageId: messageId,
         type: 'INIT_3',
         status: 'no'
