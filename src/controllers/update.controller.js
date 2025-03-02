@@ -22,6 +22,11 @@ class UpdateController{
                         responseData: req.body,
                         
                     });
+
+              if(tempData){
+                console.log('await done');
+                
+              }      
             const { context, message } = req.body;
             const { order } = message;
             const fulfillmentState = order.fulfillments[0].state.descriptor.code;
