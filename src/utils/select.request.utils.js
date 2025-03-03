@@ -95,7 +95,7 @@ static async createSelecthreePayload(selectTwo, submissionId){
             message_id: uuidv4(),
             action: "select",
             timestamp: new Date().toISOString(),
-            version: "2.0.0",
+            version: "2.0.1",
             bap_uri: selectTwo.onselectRequest.context.bap_uri,
             bap_id: selectTwo.onselectRequest.context.bap_id,
             ttl: "PT10M",

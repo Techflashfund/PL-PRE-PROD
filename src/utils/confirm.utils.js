@@ -13,7 +13,7 @@ class ConfirmPayloadHandler {
                 message_id: uuidv4(),
                 action: "confirm",
                 timestamp: new Date().toISOString(),
-                version: "2.0.0",
+                version: "2.0.1",
                 bap_uri: initThree.initPayload.context.bap_uri,
                 bap_id: initThree.initPayload.context.bap_id,
                 bpp_id: initThree.initPayload.context.bpp_id,

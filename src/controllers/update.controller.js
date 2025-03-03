@@ -130,7 +130,7 @@ class UpdateController{
                         message_id: uuidv4(),
                         action: "update",
                         timestamp: new Date().toISOString(),
-                        version: "2.0.0",
+                        version: "2.0.1",
                         bap_uri: context.bap_uri,
                         bap_id: context.bap_id,
                         bpp_id: context.bpp_id,
