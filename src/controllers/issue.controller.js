@@ -72,6 +72,9 @@ class IssueController {
                 messageId: context.message_id,
                 responseData: req.body
             });
+            if(tempData){
+                console.log('Temp data saved successfully');
+            }
 
             // Find and update message ID status
             const issueMessageId = await IssueMessageIds.findOne({
