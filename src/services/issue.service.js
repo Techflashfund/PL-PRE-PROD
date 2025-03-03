@@ -49,7 +49,8 @@ class IssueService {
             const hashedBody = blake.blake2bHex(Buffer.from(JSON.stringify(payload)));
             const base64HashedBody = Buffer.from(hashedBody, 'hex').toString('base64');
             const { authHeader } = this.generateAuthHeader(base64HashedBody);
-
+            console.log('veer',payload.context);
+            
             const response = await axios.post(
                 `${payload.context.bpp_uri}/issue`,
                 payload,
