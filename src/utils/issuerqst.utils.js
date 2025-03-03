@@ -4,6 +4,8 @@ class IssueRequestUtils {
     static async createIssuePayload(disbursedLoan, issueDetails) {
         const messageId = uuidv4();
         const issueId = uuidv4();
+        console.log('veer',disbursedLoan.context);
+        
 
         await IssueMessageIds.create({
             transactionId: disbursedLoan.transactionId,
