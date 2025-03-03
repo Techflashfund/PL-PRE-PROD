@@ -22,7 +22,7 @@ class IssueController {
             }
             
             
-            const issuePayload = IssueRequestUtils.createIssuePayload(loan, {
+            const issuePayload =await IssueRequestUtils.createIssuePayload(loan, {
                 name, phone, email, shortDesc, longDesc
             });
 
