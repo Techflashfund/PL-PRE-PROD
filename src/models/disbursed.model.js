@@ -3,30 +3,56 @@ const mongoose = require('mongoose');
 const disbursedLoanSchema = new mongoose.Schema({
     transactionId: {
         type: String,
-        required: true
+        required: true,
+        unique: true
     },
     providerId: String,
+    providerDetails: {
+        name: String,
+        shortDesc: String,
+        longDesc: String,
+        logo: String,
+        contact: {
+            groName: String,
+            groEmail: String,
+            groPhone: String,
+            groDesignation: String,
+            groAddress: String,
+            supportLink: String,
+            supportPhone: String,
+            supportEmail: String
+        },
+        lspInfo: {
+            name: String,
+            email: String,
+            phone: String,
+            address: String
+        }
+    },
     loanDetails: {
         amount: String,
         currency: String,
-        interestRate: String,
         term: String,
+        interestRate: String,
+        interestRateType: String,
+        applicationFee: String,
+        foreclosureFee: String,
+        conversionCharge: String,
+        delayPenalty: String,
+        otherPenalty: String,
+        annualPercentageRate: String,
         repaymentFrequency: String,
-        totalInstallments: String
+        numberOfInstallments: String,
+        tncLink: String,
+        coolOffPeriod: String,
+        installmentAmount: String
     },
-    status: {
-        type: String
-    },
-    breakdown: {
-        principal: String,
-        interest: String,
-        processingFee: String,
-        insuranceCharges: String,
-        netDisbursedAmount: String,
-        outstandingPrincipal: String,
-        outstandingInterest: String
-    },
-    customerDetails: {
+    breakdown: [{
+        title: String,
+        amount: String,
+        currency: String
+    }],
+    customer: {
         name: String,
         phone: String,
         email: String
@@ -35,26 +61,26 @@ const disbursedLoanSchema = new mongoose.Schema({
         installmentId: String,
         amount: String,
         currency: String,
+        status: String,
         startDate: Date,
-        endDate: Date,
-        status: String
+        endDate: Date
     }],
     documents: [{
         code: String,
         name: String,
         description: String,
-        url: String,
-        mimeType: String
+        mimeType: String,
+        url: String
     }],
-    disbursementDate: {
-        type: Date,
-        default: Date.now
+    status: {
+        type: String,
+        enum: ['DISBURSED', 'COMPLETED', 'FORECLOSED'],
+        default: 'DISBURSED'
     },
     Response: {
         type: Object,
         required: true
     }
-    
 }, {
     timestamps: true
 });

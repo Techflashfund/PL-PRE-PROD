@@ -1,12 +1,11 @@
 const { v4: uuidv4 } = require('uuid');
 const DisbursedLoan = require('../models/disbursed.model');
 const UpdateService = require('../services/update.services');
-const Foreclosure = require('../models/forclosure');
-const ForeclosureMessageIds = require('../models/forclosuremsgids.model');
+const MissedEmi = require('../models/missedemischema.model');
+const MissedEmiMessageIds = require('../models/missedmessageids');
 
-
-class ForeclosureController {
-    static async initiateForeclosure(req, res) {
+class MissedEmiController {
+    static async initiateMissedEmi(req, res) {
         try {
             const { transactionId } = req.body;
             
@@ -20,7 +19,7 @@ class ForeclosureController {
             const context = storedResponse.context;
             const messageId = uuidv4();
 
-            const foreclosurePayload = {
+            const missedEmiPayload = {
                 context: {
                     ...context,
                     action: "update",
@@ -33,29 +32,30 @@ class ForeclosureController {
                         id: orderId,
                         payments: [{
                             time: {
-                                label: "FORECLOSURE"
+                                label: "MISSED_EMI_PAYMENT"
                             }
                         }]
                     }
                 }
             };
 
-
-            await ForeclosureMessageIds.create({
+            await MissedEmiMessageIds.create({
                 transactionId,
                 messageId,
-                type: 'FORECLOSURE',
+                type: 'MISSED_EMI',
                 status: 'no'
             });
-            const updateResponse = await UpdateService.makeUpdateRequest(foreclosurePayload);
-            await Foreclosure.findOneAndUpdate(
+
+            const updateResponse = await UpdateService.makeUpdateRequest(missedEmiPayload);
+            
+            await MissedEmi.findOneAndUpdate(
                 { transactionId },
                 {
                     $set: {
                         loanId: loan._id,
                         status: 'INITIATED',
                         requestDetails: {
-                            payload: foreclosurePayload,
+                            payload: missedEmiPayload,
                             timestamp: new Date()
                         },
                         responseDetails: {
@@ -72,20 +72,18 @@ class ForeclosureController {
                     setDefaultsOnInsert: true
                 }
             );
-            // Update loan status
-           
 
             res.status(200).json({
-                message: 'Foreclosure request initiated successfully',
-                foreclosurePayload,
+                message: 'Missed EMI update initiated successfully',
+                missedEmiPayload,
                 response: updateResponse
             });
 
         } catch (error) {
-            console.error('Foreclosure initiation failed:', error);
+            console.error('Missed EMI update failed:', error);
             res.status(500).json({ error: error.message });
         }
     }
 }
 
-module.exports = ForeclosureController;
+module.exports = MissedEmiController;

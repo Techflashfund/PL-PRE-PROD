@@ -6,6 +6,8 @@ const DisbursedLoan = require('../models/disbursed.model');
 const ForeclosureLinks = require('../models/forclosurelink.model');
 const CompletedLoan = require('../models/completed.model');
 const TempData = require('../models/tempdata');
+const MissedEmiLinks = require('../models/missedemilinks');
+const PrePartPaymentLinks = require('../models/prepartlink');
 
 
 class UpdateController{
@@ -46,6 +48,56 @@ class UpdateController{
                                 amount: foreclosurePayment.params.amount,
                                 currency: foreclosurePayment.params.currency,
                                 status: foreclosurePayment.status
+                            },
+                            updatedAt: new Date()
+                        }
+                    },
+                    { 
+                        new: true, 
+                        upsert: true,
+                        setDefaultsOnInsert: true
+                    }
+                );
+            }
+            const missedEmiPayment = order.payments.find(p => 
+                p.time?.label === "MISSED_EMI_PAYMENT" && p.url
+            );
+            if (missedEmiPayment) {
+                await MissedEmiLinks.findOneAndUpdate(
+                    { transactionId: context.transaction_id },
+                    {
+                        $set: {
+                            orderId: order.id,
+                            paymentUrl: missedEmiPayment.url,
+                            paymentDetails: {
+                                amount: missedEmiPayment.params.amount,
+                                currency: missedEmiPayment.params.currency,
+                                status: missedEmiPayment.status
+                            },
+                            updatedAt: new Date()
+                        }
+                    },
+                    { 
+                        new: true, 
+                        upsert: true,
+                        setDefaultsOnInsert: true
+                    }
+                );
+            }
+            const prePartPayment = order.payments.find(p => 
+                p.time?.label === 'PRE_PART_PAYMENT' && p.url
+            );
+            if (prePartPayment) {
+                await PrePartPaymentLinks.findOneAndUpdate(
+                    { transactionId: context.transaction_id },
+                    {
+                        $set: {
+                            orderId: order.id,
+                            paymentUrl: prePartPayment.url,
+                            paymentDetails: {
+                                amount: prePartPayment.params.amount,
+                                currency: prePartPayment.params.currency,
+                                status: prePartPayment.status
                             },
                             updatedAt: new Date()
                         }

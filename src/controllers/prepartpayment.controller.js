@@ -1,14 +1,14 @@
 const { v4: uuidv4 } = require('uuid');
 const DisbursedLoan = require('../models/disbursed.model');
+const PrePayment = require('../models/prepartpayment');
 const UpdateService = require('../services/update.services');
-const Foreclosure = require('../models/forclosure');
-const ForeclosureMessageIds = require('../models/forclosuremsgids.model');
+const PrePartMessageIds = require('../models/prepartmsgids.model');
 
 
-class ForeclosureController {
-    static async initiateForeclosure(req, res) {
+class PrePaymentController {
+    static async initiatePrePayment(req, res) {
         try {
-            const { transactionId } = req.body;
+            const { transactionId, amount } = req.body;
             
             const loan = await DisbursedLoan.findOne({ transactionId });
             if (!loan) {
@@ -19,12 +19,11 @@ class ForeclosureController {
             const orderId = storedResponse.message.order.id;
             const context = storedResponse.context;
             const messageId = uuidv4();
-
-            const foreclosurePayload = {
+            const prePaymentPayload = {
                 context: {
                     ...context,
                     action: "update",
-                    message_id: messageId,
+                    message_id:messageId,
                     timestamp: new Date().toISOString()
                 },
                 message: {
@@ -32,38 +31,42 @@ class ForeclosureController {
                     order: {
                         id: orderId,
                         payments: [{
+                            params: {
+                                amount: amount,
+                                currency: "INR"
+                            },
                             time: {
-                                label: "FORECLOSURE"
+                                label: "PRE_PART_PAYMENT"
                             }
                         }]
                     }
                 }
             };
-
-
-            await ForeclosureMessageIds.create({
+            await PrePartMessageIds.create({
                 transactionId,
                 messageId,
-                type: 'FORECLOSURE',
+                type: 'PREPART',
                 status: 'no'
             });
-            const updateResponse = await UpdateService.makeUpdateRequest(foreclosurePayload);
-            await Foreclosure.findOneAndUpdate(
+
+            const updateResponse = await UpdateService.makeUpdateRequest(prePaymentPayload);
+
+            await PrePayment.findOneAndUpdate(
                 { transactionId },
                 {
                     $set: {
                         loanId: loan._id,
+                        amount: amount,
                         status: 'INITIATED',
                         requestDetails: {
-                            payload: foreclosurePayload,
+                            payload: prePaymentPayload,
                             timestamp: new Date()
                         },
                         responseDetails: {
                             payload: updateResponse,
                             timestamp: new Date()
                         },
-                        initiatedBy: req.body.userId,
-                        updatedAt: new Date()
+                        initiatedBy: req.body.userId
                     }
                 },
                 { 
@@ -72,20 +75,18 @@ class ForeclosureController {
                     setDefaultsOnInsert: true
                 }
             );
-            // Update loan status
-           
 
             res.status(200).json({
-                message: 'Foreclosure request initiated successfully',
-                foreclosurePayload,
+                message: 'Pre-payment request initiated successfully',
+                prePaymentPayload,
                 response: updateResponse
             });
 
         } catch (error) {
-            console.error('Foreclosure initiation failed:', error);
+            console.error('Pre-payment initiation failed:', error);
             res.status(500).json({ error: error.message });
         }
     }
 }
 
-module.exports = ForeclosureController;
+module.exports = PrePaymentController;
