@@ -66,11 +66,7 @@ class IssueController {
             const { context, message } = req.body;
             
             // Save request to temp data
-            const tempData = await TempData.create({
-                transactionId: context.transaction_id,
-                messageId: context.message_id,
-                responseData: req.body
-            });
+            
 
             // Find and update message ID status
             const issueMessageId = await IssueMessageIds.findOne({
