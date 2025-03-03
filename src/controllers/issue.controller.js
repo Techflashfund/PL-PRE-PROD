@@ -20,7 +20,8 @@ class IssueController {
             if (!loan) {
                 return res.status(404).json({ error: 'Loan not found' });
             }
-
+            console.log('Loan:', loan);
+            
             const issuePayload = IssueRequestUtils.createIssuePayload(loan, {
                 name, phone, email, shortDesc, longDesc
             });
