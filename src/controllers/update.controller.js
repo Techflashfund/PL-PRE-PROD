@@ -14,7 +14,46 @@ class UpdateController{
     static async update(req,res){
         return null
     }
+    static async getPaymentUrl(req, res) {
+        try {
+            const { transactionId } = req.params;
 
+            // Find the payment URL in ForeclosureLinks, MissedEmiLinks, and PrePartPaymentLinks
+            const foreclosureLink = await ForeclosureLinks.findOne({ transactionId });
+            const missedEmiLink = await MissedEmiLinks.findOne({ transactionId });
+            const prePartPaymentLink = await PrePartPaymentLinks.findOne({ transactionId });
+
+            if (foreclosureLink) {
+                return res.status(200).json({
+                    transactionId,
+                    paymentUrl: foreclosureLink.paymentUrl,
+                    paymentDetails: foreclosureLink.paymentDetails
+                });
+            }
+
+            if (missedEmiLink) {
+                return res.status(200).json({
+                    transactionId,
+                    paymentUrl: missedEmiLink.paymentUrl,
+                    paymentDetails: missedEmiLink.paymentDetails
+                });
+            }
+
+            if (prePartPaymentLink) {
+                return res.status(200).json({
+                    transactionId,
+                    paymentUrl: prePartPaymentLink.paymentUrl,
+                    paymentDetails: prePartPaymentLink.paymentDetails
+                });
+            }
+
+            return res.status(404).json({ message: 'Payment URL not found for the given transaction ID' });
+
+        } catch (error) {
+            console.error('Error fetching payment URL:', error);
+            res.status(500).json({ error: error.message });
+        }
+    }
 
     static async onupdate(req, res) {
         try {
