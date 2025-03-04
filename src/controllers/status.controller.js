@@ -485,7 +485,7 @@ class StatusController {
   
           return {
             transactionId: transaction.transactionId,
-            response: loan.Response
+            response: loan
           };
         })
       );
@@ -495,8 +495,7 @@ class StatusController {
       res.status(200).json({
         message: "Loan status check completed",
         totalLoans: finalLoans.length,
-        rejectedTransactions: rejectedTransactions.length > 0 ? 
-          rejectedTransactions.map(t => t.transactionId) : [],
+        
         loans: finalLoans,
       });
     } catch (error) {
