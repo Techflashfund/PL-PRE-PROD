@@ -289,7 +289,7 @@ class IssueController {
                                         },
                                         contact: issue.complainantInfo.contact,
                                         person: {
-                                            name: issue.complainantInfo.person.name
+                                            name: issue.complainantInfo.person.name || 'Faize'
                                         }
                                     }
                                 }
