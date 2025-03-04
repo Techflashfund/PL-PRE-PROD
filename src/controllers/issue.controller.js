@@ -1,3 +1,4 @@
+const { v4: uuidv4 } = require('uuid');
 const DisbursedLoan = require('../models/disbursed.model');
 const Issue = require('../models/issueschema');
 const IssueRequestUtils = require('../utils/issuerqst.utils');
