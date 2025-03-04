@@ -27,6 +27,7 @@ const checDisbursalStatus = require('./routes/disbursal.routes');
 const checkcompletedloan = require('./routes/completed.routes');
 const prepaymentRoutes = require('./routes/prepart.routes');
 const issueRoutes = require('./routes/issue.routes');
+const issuestatusRoutes = require('./routes/issuestatus.routes');
 const app = express();
 
 // Middleware
@@ -80,6 +81,8 @@ app.use('/check-completed',checkcompletedloan)
 app.use('/prepayment', prepaymentRoutes);
 app.use('/issues', issueRoutes);
 app.use('/on_issue', issueRoutes);
+app.use('/issue_status', issuestatusRoutes);
+app.use('/on_issue_status', issuestatusRoutes);
 app.get('/api/test', (req, res) => {
     res.json({ message: 'CORS is working!' });
 });

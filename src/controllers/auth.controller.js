@@ -95,9 +95,99 @@ const login = async (req, res) => {
         res.status(500).json({ message: 'Something went wrong' });
     }
 };
+const forgotPassword = async (req, res) => {
+    try {
+        const { email } = req.body;
+        
+        const user = await User.findOne({ email });
+        if (!user) {
+            return res.status(404).json({ message: 'User not found' });
+        }
+
+        // Generate OTP
+        const otp = generateOtp();
+        const otpExpiryTime = new Date(Date.now() + 10 * 60 * 1000); // 10 minutes
+
+        user.otp = {
+            code: otp,
+            expiryTime: otpExpiryTime
+        };
+        await user.save();
+
+        // Send OTP email
+        await sendOtpEmail(email, otp);
+
+        res.json({ message: 'Password reset OTP sent to your email' });
+    } catch (error) {
+        console.error('Forgot password error:', error);
+        res.status(500).json({ message: 'Something went wrong' });
+    }
+};
+const resetPassword = async (req, res) => {
+    try {
+        const { email, otp, newPassword } = req.body;
+        
+        const user = await User.findOne({ email });
+        if (!user) {
+            return res.status(404).json({ message: 'User not found' });
+        }
+
+        if (!isOtpValid(user.otp?.code, otp, user.otp?.expiryTime)) {
+            return res.status(400).json({ message: 'Invalid or expired OTP' });
+        }
+
+        // Hash new password
+        const hashedPassword = await bcrypt.hash(newPassword, 12);
+        
+        user.password = hashedPassword;
+        user.otp = undefined;
+        await user.save();
+
+        res.json({ message: 'Password reset successfully' });
+    } catch (error) {
+        console.error('Reset password error:', error);
+        res.status(500).json({ message: 'Something went wrong' });
+    }
+};
+const resendOtp = async (req, res) => {
+    try {
+        const { email } = req.body;
+        
+        const user = await User.findOne({ email });
+        if (!user) {
+            return res.status(404).json({ message: 'User not found' });
+        }
+
+        // Generate new OTP
+        const otp = generateOtp();
+        const otpExpiryTime = new Date(Date.now() + 10 * 60 * 1000); // 10 minutes
+
+        user.otp = {
+            code: otp,
+            expiryTime: otpExpiryTime
+        };
+        await user.save();
+
+        // Send new OTP email
+        await sendOtpEmail(email, otp);
+
+        res.json({ 
+            message: 'New OTP sent successfully',
+            expiryTime: otpExpiryTime
+        });
+
+    } catch (error) {
+        console.error('Resend OTP error:', error);
+        res.status(500).json({ message: 'Failed to resend OTP' });
+    }
+};
+
 
 module.exports = {
     signup,
     verifyEmail,
-    login
+    login,
+    forgotPassword,
+    resetPassword,
+    resendOtp
 };

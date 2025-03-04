@@ -70,6 +70,34 @@ class IssueService {
             throw error;
         }
     }
+    static async checkIssueStatus(payload) {
+        try {
+            console.log('Checking issue status with payload:', JSON.stringify(payload, null, 2));
+
+            const hashedBody = blake.blake2bHex(Buffer.from(JSON.stringify(payload)));
+            const base64HashedBody = Buffer.from(hashedBody, 'hex').toString('base64');
+            const { authHeader } = this.generateAuthHeader(base64HashedBody);
+
+            const response = await axios.post(
+                `${payload.context.bpp_uri}/issue_status`,
+                payload,
+                {
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': authHeader,
+                        'Accept': 'application/json'
+                    }
+                }
+            );
+
+            console.log('Issue status check response:', response.data);
+            return response.data;
+
+        } catch (error) {
+            console.error('Issue status check failed:', error);
+            throw error;
+        }
+    }
 }
 
 module.exports = IssueService;

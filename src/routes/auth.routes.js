@@ -32,5 +32,14 @@ router.post('/login',
     ],
     authController.login
 );
+router.post('/forgot-password', authController.forgotPassword);
+router.post('/reset-password', authController.resetPassword);
+router.post('/resend-otp',
+    [
+        body('email').isEmail(),
+        validateRequest
+    ],
+    authController.resendOtp
+);
 
 module.exports = router;

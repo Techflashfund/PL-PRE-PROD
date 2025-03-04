@@ -30,6 +30,62 @@ const issueSchema = new mongoose.Schema({
     responseDetails: {
         payload: Object,
         timestamp: Date
+    },
+    resolution: {
+        shortDesc: String,
+        longDesc: String,
+        actionTriggered: String
+    },
+    respondentActions: [{
+        respondentAction: String,
+        shortDesc: String,
+        updatedAt: Date,
+        updatedBy: {
+            org: {
+                name: String
+            },
+            contact: {
+                phone: String,
+                email: String
+            },
+            person: {
+                name: String
+            }
+        },
+        cascadedLevel: Number
+    }],
+    resolutionProvider: {
+        respondentInfo: {
+            type: String,
+            organization: {
+                org: {
+                    name: String
+                },
+                contact: {
+                    phone: String,
+                    email: String
+                },
+                person: {
+                    name: String
+                }
+            },
+            resolutionSupport: {
+                contact: {
+                    phone: String,
+                    email: String
+                },
+                gros: [{
+                    person: {
+                        name: String
+                    },
+                    contact: {
+                        phone: String,
+                        email: String
+                    },
+                    groType: String
+                }]
+            }
+        }
     }
 }, {
     timestamps: true
