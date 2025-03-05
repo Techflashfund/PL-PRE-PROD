@@ -81,6 +81,7 @@ app.use('/check-loan-status',checkLoanStatus)
 app.use('/check-disbursal-status',checDisbursalStatus)
 app.use('/check-completed',checkcompletedloan)
 app.use('/prepayment', prepaymentRoutes);
+app.use('/missedemi', prepaymentRoutes);
 app.use('/issues', issueRoutes);
 app.use('/on_issue', issueRoutes);
 app.use('/issue_status', issuestatusRoutes);

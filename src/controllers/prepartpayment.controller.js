@@ -87,6 +87,56 @@ class PrePaymentController {
             res.status(500).json({ error: error.message });
         }
     }
+    static async initiatemissedemi(req, res) {
+        try {
+            const { transactionId } = req.body;
+            
+            const loan = await DisbursedLoan.findOne({ transactionId });
+            if (!loan) {
+                return res.status(404).json({ error: 'Loan not found' });
+            }
+
+            const storedResponse = loan.Response;
+            const orderId = storedResponse.message.order.id;
+            const context = storedResponse.context;
+            const messageId = uuidv4();
+            const prePaymentPayload = {
+                context: {
+                    ...context,
+                    action: "update",
+                    message_id:messageId,
+                    timestamp: new Date().toISOString()
+                },
+                message: {
+                    update_target: "payments",
+                    order: {
+                        id: orderId,
+                        payments: [{
+                            
+                            time: {
+                                label: "MISSED_EMI_PAYMENT"
+                            }
+                        }]
+                    }
+                }
+            };
+            
+
+            const updateResponse = await UpdateService.makeUpdateRequest(prePaymentPayload);
+
+            
+
+            res.status(200).json({
+                message: 'missed request initiated successfully',
+                prePaymentPayload,
+                response: updateResponse
+            });
+
+        } catch (error) {
+            console.error('Pre-payment initiation failed:', error);
+            res.status(500).json({ error: error.message });
+        }
+    }
 }
 
 module.exports = PrePaymentController;

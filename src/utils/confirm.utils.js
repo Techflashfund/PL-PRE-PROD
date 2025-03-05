@@ -38,7 +38,7 @@ class ConfirmPayloadHandler {
                         }
                     }],
                     payments: [{
-                        id: "PAYMENT_ID_PERSONAL_LOAN",
+                        id: initThree.initPayload.message.order.payments[0].id,
                         collected_by: "BPP",
                         type: "ON_ORDER",
                         status: "NOT-PAID",
@@ -68,7 +68,7 @@ class ConfirmPayloadHandler {
                                 list: [
                                     {
                                         descriptor: { code: "SETTLEMENT_AMOUNT" },
-                                        value: "1159"
+                                        value: "1666.67"
                                     },
                                     {
                                         descriptor: { code: "SETTLEMENT_TYPE" },
