@@ -56,6 +56,28 @@ class UserDetailsController {
             });
         }
     }
+    static async checkUserId(req, res) {
+        try {
+            const { userId } = req.params;
+
+            // Check if the user ID exists in UserDetails
+            const userDetails = await UserDetails.findOne({ user: userId });
+
+            if (userDetails) {
+                return res.status(200).json({
+                    message: 'User ID exists in UserDetails',
+                    userDetails
+                });
+            } else {
+                return res.status(404).json({
+                    message: 'User ID not found in UserDetails'
+                });
+            }
+        } catch (error) {
+            console.error('Error checking user ID:', error);
+            res.status(500).json({ error: error.message });
+        }
+    }
 }
 
 module.exports = UserDetailsController;
