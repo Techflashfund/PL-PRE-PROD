@@ -71,6 +71,7 @@ class SearchController {
             const transaction = await Transaction.findOne({ 
                 transactionId: context.transaction_id 
             });
+console.log('Transaction:', transaction);
 
             if (!transaction) {
                 return res.status(404).json({ error: 'Transaction not found' });
