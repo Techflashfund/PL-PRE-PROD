@@ -21,7 +21,7 @@ const generateSearchRequestBody = ({ transactionId, messageId }) => {
                     descriptor: { code: "PERSONAL_LOAN" }
                 },
                 payment: {
-                    collected_by: "BPP66",
+                    collected_by: "BPP",
                     tags: [
                         {
                             descriptor: { code: "BUYER_FINDER_FEES" },
