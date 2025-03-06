@@ -17,43 +17,40 @@ class UpdateController{
     static async getPaymentUrl(req, res) {
         try {
             const { transactionId } = req.params;
-
-            // Find the payment URL in ForeclosureLinks, MissedEmiLinks, and PrePartPaymentLinks
-            const foreclosureLink = await ForeclosureLinks.findOne({ transactionId });
-            const missedEmiLink = await MissedEmiLinks.findOne({ transactionId });
-            const prePartPaymentLink = await PrePartPaymentLinks.findOne({ transactionId });
-
-            if (foreclosureLink) {
+            const { type } = req.query; // Assuming `type` is passed as a query parameter
+    
+            // Check if the type is provided and validate it
+            if (!type || !['prepayment', 'foreclosure', 'missed'].includes(type)) {
+                return res.status(400).json({ message: 'Invalid or missing payment type' });
+            }
+    
+            let paymentLink;
+    
+            // Find the payment URL based on the type
+            if (type === 'foreclosure') {
+                paymentLink = await ForeclosureLinks.findOne({ transactionId });
+            } else if (type === 'missed') {
+                paymentLink = await MissedEmiLinks.findOne({ transactionId });
+            } else if (type === 'prepayment') {
+                paymentLink = await PrePartPaymentLinks.findOne({ transactionId });
+            }
+    
+            if (paymentLink) {
                 return res.status(200).json({
                     transactionId,
-                    paymentUrl: foreclosureLink.paymentUrl,
-                    paymentDetails: foreclosureLink.paymentDetails
+                    paymentUrl: paymentLink.paymentUrl,
+                    paymentDetails: paymentLink.paymentDetails
                 });
             }
-
-            if (missedEmiLink) {
-                return res.status(200).json({
-                    transactionId,
-                    paymentUrl: missedEmiLink.paymentUrl,
-                    paymentDetails: missedEmiLink.paymentDetails
-                });
-            }
-
-            if (prePartPaymentLink) {
-                return res.status(200).json({
-                    transactionId,
-                    paymentUrl: prePartPaymentLink.paymentUrl,
-                    paymentDetails: prePartPaymentLink.paymentDetails
-                });
-            }
-
-            return res.status(404).json({ message: 'Payment URL not found for the given transaction ID' });
-
+    
+            return res.status(404).json({ message: 'Payment URL not found for the given transaction ID and type' });
+    
         } catch (error) {
             console.error('Error fetching payment URL:', error);
             res.status(500).json({ error: error.message });
         }
     }
+    
 
     static async onupdate(req, res) {
         try {
