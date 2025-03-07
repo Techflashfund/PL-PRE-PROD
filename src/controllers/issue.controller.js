@@ -99,6 +99,7 @@ class IssueController {
                         status: message.issue.issue_actions?.respondent_actions?.[0]?.respondent_action || 'PROCESSING',
                         'responseDetails.respondentActions': message.issue.issue_actions?.respondent_actions,
                         'responseDetails.updatedAt': message.issue.updated_at,
+                        response:req.body,
                         updatedAt: new Date()
                     }
                 }
