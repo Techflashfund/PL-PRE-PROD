@@ -5,6 +5,7 @@ const IssueRequestUtils = require('../utils/issuerqst.utils');
 const IssueService = require('../services/issue.service');
 const IssueMessageIds = require('../models/issuemessageids.model');
 const IssueStatus = require('../models/issuestatus.mode');
+const Transaction=require('../models/transaction.model');
 
 const TempData = require('../models/tempdata');
 
@@ -165,64 +166,45 @@ class IssueController {
     }
     static async getIssueStatus(req, res) {
         try {
-            const { transactionId, issueId } = req.body;
-
-            const issue = await Issue.findOne({ 
-                transactionId,
-                issueId 
-            });
-
-            if (!issue) {
-                return res.status(404).json({ error: 'Issue not found' });
+            const { userId } = req.body;
+    
+            // Fetch all transactions for the user by ObjectId
+            const transactions = await Transaction.find({ user: userId });
+    
+            if (!transactions.length) {
+                return res.status(404).json({
+                    message: "No transactions found for this user",
+                });
             }
-
-            const messageId = uuidv4();
-
-            const statusPayload = {
-                context: {
-                    ...issue.requestDetails.payload.context,
-                    action: "issue_status",
-                    message_id: messageId,
-                    timestamp: new Date().toISOString()
-                },
-                message: {
-                    issue_id: issueId
-                }
-            };
-
-            // Save issue status request
-            await IssueStatus.create({
-                transactionId,
-                messageId,
-                issueId,
-                status: 'PENDING',
-                requestDetails: {
-                    payload: statusPayload,
-                    timestamp: new Date()
-                }
+    
+            // Extract transactionIds (string IDs, not MongoDB _id)
+            const transactionIds = transactions.map(transaction => transaction.transactionId);
+    
+            // Find any issue statuses that match these transaction IDs
+            const issueStatuses = await IssueStatus.find({
+                transactionId: { $in: transactionIds }
             });
-
-            const statusResponse = await IssueService.checkIssueStatus(statusPayload);
-
-            // Update with response
-            await IssueStatus.findOneAndUpdate(
-                { messageId },
-                {
-                    $set: {
-                        status: 'COMPLETED',
-                        responseDetails: {
-                            payload: statusResponse,
-                            timestamp: new Date()
-                        }
-                    }
-                }
-            );
-
+    
+            // If no issue statuses found
+            if (!issueStatuses.length) {
+                return res.status(404).json({
+                    message: "No issue statuses found for this user's transactions",
+                });
+            }
+    
+            // Format the response based on whether there's one or multiple results
+            let response;
+            if (issueStatuses.length === 1) {
+                response = issueStatuses[0];
+            } else {
+                response = issueStatuses;
+            }
+    
             res.status(200).json({
                 message: 'Issue status request processed',
-                response: statusResponse
+                response: response
             });
-
+    
         } catch (error) {
             console.error('Issue status check failed:', error);
             res.status(500).json({ error: error.message });
