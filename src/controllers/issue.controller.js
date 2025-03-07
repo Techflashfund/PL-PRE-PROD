@@ -91,7 +91,8 @@ class IssueController {
                 );
             }
 
-            // Update issue details
+            const issueId = message.issue.id;
+            const transactionId= context.transaction_id
             await Issue.findOneAndUpdate(
                 { issueId: message.issue.id },
                 {
@@ -105,8 +106,56 @@ class IssueController {
                 }
             );
 
+
+            const issue = await Issue.findOne({ 
+                transactionId,
+                issueId 
+            });
+            if (!issue) {
+                return res.status(404).json({ error: 'Issue not found' });
+            }
+            const messageId = uuidv4();
+            const statusPayload = {
+                context: {
+                    ...issue.requestDetails.payload.context,
+                    action: "issue_status",
+                    message_id: messageId,
+                    timestamp: new Date().toISOString()
+                },
+                message: {
+                    issue_id: issueId
+                }
+            };
+
+            await IssueStatus.create({
+                transactionId,
+                messageId,
+                issueId,
+                status: 'PENDING',
+                requestDetails: {
+                    payload: statusPayload,
+                    timestamp: new Date()
+                }
+            });
+
+            const statusResponse = await IssueService.checkIssueStatus(statusPayload);
+
+            // Update with response
+            await IssueStatus.findOneAndUpdate(
+                { messageId },
+                {
+                    $set: {
+                        status: 'COMPLETED',
+                        responseDetails: {
+                            payload: statusResponse,
+                            timestamp: new Date()
+                        }
+                    }
+                }
+            );
             res.status(200).json({
-                message: 'Issue response processed successfully'
+                message: 'Issue status request processed',
+                response: statusResponse
             });
 
         } catch (error) {
