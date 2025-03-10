@@ -58,6 +58,11 @@ class StatusController {
             // Handle DISBURSED state
             if (fulfillmentState === "DISBURSED") {
               try {
+                await Transaction.findOneAndUpdate(
+                  { transactionId },
+                  { status: "LOAN_DISBURSED" },
+                  { new: true }
+                );
                 const updatedLoan = await DisbursedLoan.findOneAndUpdate(
                   { transactionId },
                   {
