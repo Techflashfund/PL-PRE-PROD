@@ -1,7 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const Transaction = require('../models/transaction.model');
-
+const UserDetails = require('../models/userdetails.model'); // Added for loan purpose and age calculation
 
 /**
  * GET /api/transactions/history
@@ -24,19 +24,40 @@ router.get('/transactions/history', async (req, res) => {
       createdAt: { $gte: startDate, $lte: endDate }
     })
     .sort({ createdAt: -1 })
+    .lean()
     .populate({
       path: 'user',
-      select: 'email phone' // Only include email and phone from user
-    })
-    .populate({
-      path: 'formDetails',
-      select: 'name type' // Adjust based on your FormDetails schema
+      select: 'email'
     });
+    
+    // Get user details to access loan purpose (endUse) and age (calculated from dob)
+    const transactionData = await Promise.all(transactions.map(async (transaction) => {
+      const userDetail = await UserDetails.findOne({ user: transaction.user._id }).lean();
+      
+      // Calculate age if dob exists
+      let age = null;
+      if (userDetail && userDetail.dob) {
+        const dobDate = new Date(userDetail.dob);
+        const ageDiffMs = Date.now() - dobDate.getTime();
+        const ageDate = new Date(ageDiffMs);
+        age = Math.abs(ageDate.getUTCFullYear() - 1970);
+      }
+      
+      return {
+        name: transaction.user.email,
+        transactionId: transaction.transactionId,
+        amount: transaction.amount || "N/A",
+        status: transaction.status || "N/A",
+        date: transaction.createdAt,
+        loanPurpose: userDetail ? userDetail.endUse : "N/A",
+        age: age || "N/A"
+      };
+    }));
     
     return res.status(200).json({
       success: true,
       data: {
-        transactions,
+        transactions: transactionData,
         period: {
           startDate,
           endDate,
@@ -71,14 +92,39 @@ router.get('/dashboard', async (req, res) => {
     startDate.setMonth(startDate.getMonth() - months);
     
     // Find transactions within the date range
-    const transactions = await Transaction.find({
+    const rawTransactions = await Transaction.find({
       createdAt: { $gte: startDate, $lte: endDate }
     })
     .sort({ createdAt: -1 })
+    .lean()
     .populate({
       path: 'user',
-      select: 'email phone'
+      select: 'email'
     });
+    
+    // Process transactions to include only the required fields
+    const transactions = await Promise.all(rawTransactions.map(async (transaction) => {
+      const userDetail = await UserDetails.findOne({ user: transaction.user._id }).lean();
+      
+      // Calculate age if dob exists
+      let age = null;
+      if (userDetail && userDetail.dob) {
+        const dobDate = new Date(userDetail.dob);
+        const ageDiffMs = Date.now() - dobDate.getTime();
+        const ageDate = new Date(ageDiffMs);
+        age = Math.abs(ageDate.getUTCFullYear() - 1970);
+      }
+      
+      return {
+        name: transaction.user.email,
+        transactionId: transaction.transactionId,
+        amount: transaction.amount || "N/A",
+        status: transaction.status || "N/A",
+        date: transaction.createdAt,
+        loanPurpose: userDetail ? userDetail.endUse : "N/A",
+        age: age || "N/A"
+      };
+    }));
     
     // Get transaction stats
     const totalTransactions = transactions.length;
@@ -94,7 +140,7 @@ router.get('/dashboard', async (req, res) => {
     // Get transactions by day for the chart data
     const transactionsByDay = {};
     transactions.forEach(transaction => {
-      const date = transaction.createdAt.toISOString().split('T')[0]; // YYYY-MM-DD
+      const date = new Date(transaction.date).toISOString().split('T')[0]; // YYYY-MM-DD
       if (!transactionsByDay[date]) transactionsByDay[date] = 0;
       transactionsByDay[date]++;
     });
