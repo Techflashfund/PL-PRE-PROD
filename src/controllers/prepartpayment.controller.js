@@ -32,7 +32,7 @@ class PrePaymentController {
                         id: orderId,
                         payments: [{
                             params: {
-                                amount: amount,
+                                amount: amount.toString(),
                                 currency: "INR"
                             },
                             time: {
