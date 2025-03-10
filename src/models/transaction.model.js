@@ -25,6 +25,7 @@ const transactionSchema = new mongoose.Schema({
 
         
     },
+    amount:{type:String},
     formDetails: {
         type: mongoose.Schema.Types.ObjectId,
         ref: 'FormDetails'

@@ -29,6 +29,18 @@ class AmountController {
         });
       }
 
+
+      const updatedTransaction = await Transaction.findOneAndUpdate(
+        { transactionId: transactionId },
+        { amount: amount },
+        { new: true } // This returns the updated document
+      );
+      
+      if (!updatedTransaction) {
+        return res.status(404).json({
+          error: "Transaction not found"
+        });
+      }
       const selectTwo = await SelectTwo.findOne({
         transactionId,
         providerId,
