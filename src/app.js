@@ -30,6 +30,7 @@ const issueRoutes = require('./routes/issue.routes');
 const issuestatusRoutes = require('./routes/issuestatus.routes');
 const paymentupdateRoutes = require('./routes/paymenturl.routes');
 const dashboardroutes=require('./routes/dashboard.routes')
+const adminroutes=require('./routes/admin.routes')
 
 const app = express();
 
@@ -92,6 +93,7 @@ app.use('/on_issue_status', issuestatusRoutes);
 
 // ...existing code...
 app.use('/admin',dashboardroutes)
+app.use('/auth/admin',adminroutes)
 app.use('/api/userdetails', userdetailsroute);
 
 // ...existing code...
