@@ -90,33 +90,10 @@ class SelectController {
       }
 
       // Update SelectOne
-      const selectOne = await SelectOne.findOneAndUpdate(
-        {
-          transactionId: context.transaction_id,
-          providerId: message.order.provider.id,
-        },
-        {
-          $set: {
-            onselectRequest: req.body,
-            status: "COMPLETED",
-            responseTimestamp: new Date(),
-          },
-        },
-        { new: true }
-      );
-
-      if (!selectOne) {
-        return res.status(404).json({ error: "Select request not found" });
-      }
+      
 
       // Update Transaction
-      await Transaction.findOneAndUpdate(
-        { transactionId: context.transaction_id },
-        {
-          status: "SELECTONE_COMPLETED",
-          selectoneResponse: req.body,
-        }
-      );
+      
 
       res.status(200).json({
         message: "Select response processed successfully",
