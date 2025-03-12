@@ -7,7 +7,7 @@ const { searchRequest } = require('../services/search.services');
 const { submitToExternalForm } = require('../services/formsubmission.services');
 const SelectRequestHandler = require('../services/select.services');
 const SelectPayloadHandler = require('../utils/select.request.utils');
-const SelectOne = require('../models/selectone.nodel');
+const SelectTwo = require('../models/selecttwo.model');
 const SearchIds = require('../models/searchids.model');
 const SelectIds = require('../models/selectids.model');
 class SearchController {
@@ -140,13 +140,13 @@ class SearchController {
             messageId: selectPayload.context.message_id,
             type: 'SELECT_2',
         });
-        await SelectOne.create({
-            transactionId: context.transaction_id,
-            providerId: provider.id,
-            selectPayload,
-            selectResponse,
-            status: 'INITIATED'
-        });
+        await SelectTwo.create({
+                        transactionId: payload.context.transaction_id,
+                        providerId: payload.message.order.provider.id,
+                        selectPayload,
+                        selectResponse,
+                        status: 'INITIATED'
+                    });
         await Transaction.findByIdAndUpdate(
             transaction._id,
             { status: 'SELECTONE_INITIATED' }

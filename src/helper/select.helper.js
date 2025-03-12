@@ -113,7 +113,8 @@ const FormIds = require('../models/formids.model');
         if (!formDetails || !formDetails.form?.url || !formDetails.form?.id || !payload.message?.order?.provider?.id) {
             return { success: false, error: "NACK" };
         }
-
+        console.log('formdetails_loan',formDetails);
+        
         const selectTwo = await SelectTwo.findOneAndUpdate(
             {
                 transactionId: payload.context.transaction_id,
