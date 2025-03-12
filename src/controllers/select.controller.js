@@ -98,7 +98,7 @@ class SelectController {
       res.status(200).json({
         message: "Select response processed successfully",
         transactionId: context.transaction_id,
-        providerId: message.order.provider.id,
+       
       });
     } catch (error) {
       console.error("Select response processing failed:", error);
