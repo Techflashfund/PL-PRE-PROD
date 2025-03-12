@@ -145,7 +145,7 @@ class InitRequestUtils {
                     country: { code: "IND" },
                     city: { code: "*" }
                 },
-                version: "2.0.0",
+                version: "2.0.1",
                 action: "init",
                 bap_uri: initOne.initPayload.context.bap_uri,
                 bap_id: initOne.initPayload.context.bap_id,

@@ -99,7 +99,7 @@ class FormSubmissionService {
                     city: userDetails.address?.city || '',
                     state: userDetails.address?.state || '',
                     pincode: userDetails.address?.pincode || '',
-                    aa_id: userDetails.aa_id || '',
+                    // aa_id: userDetails.aa_id || '',
                     endUse: userDetails.endUse || 'other',
                     // Use proper boolean string for special domains
                     bureauConsent: userDetails.bureauConsent ? 'true' : 'false'
@@ -125,7 +125,7 @@ class FormSubmissionService {
                     city: userDetails.address?.city || '',
                     state: userDetails.address?.state || '',
                     pincode: userDetails.address?.pincode || '',
-                    aa_id: userDetails.aa_id || '',
+                    // aa_id: userDetails.aa_id || '',
                     endUse: userDetails.endUse || 'other',
                     bureauConsent: userDetails.bureauConsent ? 'on' : '',
                     bureauConsent_true: userDetails.bureauConsent ? 'true' : 'false'

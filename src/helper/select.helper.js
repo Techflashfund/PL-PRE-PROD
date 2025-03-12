@@ -110,6 +110,10 @@ const FormIds = require('../models/formids.model');
         )?.list;
         const quote = payload.message?.order?.quote;
 
+        if (!formDetails || !formDetails.form?.url || !formDetails.form?.id || !payload.message?.order?.provider?.id) {
+            return { success: false, error: "NACK" };
+        }
+
         const selectTwo = await SelectTwo.findOneAndUpdate(
             {
                 transactionId: payload.context.transaction_id,
@@ -164,58 +168,84 @@ const FormIds = require('../models/formids.model');
             { new: true }
         );
 
+        if (!selectTwo) {
+            return { success: false, error: "NACK" };
+        }
+
         await Transaction.findOneAndUpdate(
             { transactionId: payload.context.transaction_id },
             { status: 'SELECTWO_COMPLETED' }
         );
 
-        return selectTwo;
+        return {
+            success: true,
+            data: {
+                context: payload.context,
+                message: { ack: { status: "ACK" } }
+            }
+        };
+
     } catch (error) {
         console.error('Handle onselect loan amount failed:', error);
-        throw error;
+        return { success: false, error: "NACK" };
     }
 }
+
 static async handleOnselectKYC(payload) {
     try {
         const formDetails = payload.message?.order?.items?.[0]?.xinput;
-    if (!formDetails) {
-        throw new Error('Form details not found in KYC response');
-    }
-    const selectThree = await SelectThree.findOneAndUpdate(
-        {
-            transactionId: payload.context.transaction_id,
-            providerId: payload.message.order.provider.id
-        },
-        {
-            $set: {
-                onselectRequest: payload,
-                kycformurl: formDetails.form.url,
-                formId: formDetails.form.id,
-                status: 'COMPLETED',
-                responseTimestamp: new Date()
-            }
-        },
-        { new: true }
-    );
-    await FormIds.create({
-        transactionId: payload.context.transaction_id,
-        formId: formDetails.form.id,
-        type: 'KYC',
-        status: 'no'
-    });
-    await Transaction.findOneAndUpdate(
-        { transactionId: payload.context.transaction_id },
-        { status: 'SELECTHREE_COMPLETED' }
-    );
-    return selectThree;
         
+        if (!formDetails || !formDetails.form?.url || !formDetails.form?.id || !payload.message?.order?.provider?.id) {
+            return { success: false, error: "NACK" };
+        }
+
+        const selectThree = await SelectThree.findOneAndUpdate(
+            {
+                transactionId: payload.context.transaction_id,
+                providerId: payload.message.order.provider.id
+            },
+            {
+                $set: {
+                    onselectRequest: payload,
+                    kycformurl: formDetails.form.url,
+                    formId: formDetails.form.id,
+                    status: 'COMPLETED',
+                    responseTimestamp: new Date()
+                }
+            },
+            { new: true }
+        );
+
+        if (!selectThree) {
+            return { success: false, error: "NACK" };
+        }
+
+        await FormIds.create({
+            transactionId: payload.context.transaction_id,
+            formId: formDetails.form.id,
+            type: 'KYC',
+            status: 'no'
+        });
+
+        await Transaction.findOneAndUpdate(
+            { transactionId: payload.context.transaction_id },
+            { status: 'SELECTHREE_COMPLETED' }
+        );
+
+        return {
+            success: true,
+            data: {
+                context: payload.context,
+                message: { ack: { status: "ACK" } }
+            }
+        };
+
     } catch (error) {
         console.error('Handle onselect KYC failed:', error);
-        throw error;
+        return { success: false, error: "NACK" };
     }
-        
-    }
-    
+}
+
 
 }
 
