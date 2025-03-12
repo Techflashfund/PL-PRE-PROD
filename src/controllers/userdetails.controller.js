@@ -27,7 +27,7 @@ class UserDetailsController {
                     state: req.body.state,
                     pincode: req.body.pincode
                 },
-                aa_id: req.body.aa_id,
+                // aa_id: req.body.aa_id,
                 bureauConsent: req.body.bureauConsent,
                 lastUpdated: new Date()
             };

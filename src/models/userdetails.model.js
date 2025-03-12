@@ -42,7 +42,7 @@ const userDetailsSchema = new mongoose.Schema({
         state: String,
         pincode: String
     },
-    aa_id: String,
+    // aa_id: String,
     bureauConsent: { type: Boolean, required: true },
     lastUpdated: { type: Date, default: Date.now }
 }, {
