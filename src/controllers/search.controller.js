@@ -142,7 +142,7 @@ class SearchController {
         });
         await SelectTwo.create({
                         transactionId: context.transaction_id,
-                        providerId:message.order.provider.id,
+                        providerId:provider.id,
                         selectPayload,
                         selectResponse,
                         status: 'INITIATED'
