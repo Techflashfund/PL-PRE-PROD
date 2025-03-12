@@ -29,7 +29,8 @@ class OffersController {
                 installmentAmount: record.loanOffer.repayment.amount,
                 processingFee: record.loanOffer.fees.application,
                 foreclosureFee: record.loanOffer.fees.foreclosure,
-                annualPercentageRate: record.loanOffer.annualPercentageRate
+                annualPercentageRate: record.loanOffer.annualPercentageRate,
+                lenderlogo:record.onselectRequest.message.order.provider.descriptor.images.url
             }));
 
             res.status(200).json(offers);
