@@ -4,11 +4,11 @@ class IssueRequestUtils {
     static async createIssuePayload(disbursedLoan, issueDetails) {
         const messageId = uuidv4();
         const issueId = uuidv4();
-        console.log('veer',disbursedLoan.context.bpp_uri);
+        console.log('veer',disbursedLoan.transaction_id);
         
 
         await IssueMessageIds.create({
-            transactionId: disbursedLoan.transactionId,
+            transactionId: issueDetails.transactionId,
             messageId: messageId,
             issueId: issueId,
             type: 'ISSUE',
@@ -25,7 +25,7 @@ class IssueRequestUtils {
                 bap_id: disbursedLoan.context.bap_id,
                 bap_uri: disbursedLoan.context.bap_uri,
                 bpp_uri: disbursedLoan.context.bpp_uri,
-                transaction_id: disbursedLoan.transactionId,
+                transaction_id: issueDetails.transactionId,
                 message_id: messageId,
                 timestamp: new Date().toISOString(),
                 bpp_id: disbursedLoan.context.bpp_id,

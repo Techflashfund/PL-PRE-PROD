@@ -13,6 +13,8 @@ const TempData = require('../models/tempdata');
 class IssueController {
     static async createIssue(req, res) {
         try {
+            console.log(req.body);
+            
             const { 
                 transactionId, 
                 name, 
@@ -40,7 +42,7 @@ class IssueController {
             
             
             const issuePayload =await IssueRequestUtils.createIssuePayload(loanress ||  selectresss, {
-                name, phone, email, shortDesc, longDesc
+                name, phone, email, shortDesc, longDesc,transactionId
             });
 
             const issueResponse = await IssueService.submitIssue(issuePayload);
