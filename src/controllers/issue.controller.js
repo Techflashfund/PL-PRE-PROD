@@ -345,21 +345,6 @@ class IssueController {
             // Send complete request
             const completeResponse = await IssueService.submitIssue(completePayload);
     
-            // Send status request
-            const statusPayload = {
-                context: {
-                    ...completePayload.context,
-                    action: "issue_status",
-                    message_id: uuidv4(),
-                    timestamp: new Date().toISOString()
-                },
-                message: {
-                    issue_id: issueId
-                }
-            };
-    
-            const statusResponse = await IssueService.submitIssue(statusPayload);
-    
             // Update issue status
             await Issue.findOneAndUpdate(
                 { issueId },
@@ -373,10 +358,16 @@ class IssueController {
                 }
             );
     
+            // Delete the document from IssueStatus
+            const deleteResult = await IssueStatus.findOneAndDelete({ transactionId, issueId });
+    
+            if (!deleteResult) {
+                console.warn(`No IssueStatus found for transactionId: ${transactionId}, issueId: ${issueId}`);
+            }
+    
             res.status(200).json({
-                message: 'Issue marked as complete',
-                completeResponse,
-                statusResponse
+                message: 'Issue marked as complete and IssueStatus entry deleted',
+                completeResponse
             });
     
         } catch (error) {
@@ -384,6 +375,7 @@ class IssueController {
             res.status(500).json({ error: error.message });
         }
     }
+    
 }
 
 module.exports = IssueController;
