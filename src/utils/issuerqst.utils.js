@@ -4,7 +4,7 @@ class IssueRequestUtils {
     static async createIssuePayload(disbursedLoan, issueDetails) {
         const messageId = uuidv4();
         const issueId = uuidv4();
-        console.log('veer',disbursedLoan.Response.context.bpp_uri);
+        console.log('veer',disbursedLoan.context.bpp_uri);
         
 
         await IssueMessageIds.create({
@@ -22,13 +22,13 @@ class IssueRequestUtils {
                 city: "std:0522",
                 action: "issue",
                 core_version: "1.0.0",
-                bap_id: disbursedLoan.Response.context.bap_id,
-                bap_uri: disbursedLoan.Response.context.bap_uri,
-                bpp_uri: disbursedLoan.Response.context.bpp_uri,
+                bap_id: disbursedLoan.context.bap_id,
+                bap_uri: disbursedLoan.context.bap_uri,
+                bpp_uri: disbursedLoan.context.bpp_uri,
                 transaction_id: disbursedLoan.transactionId,
                 message_id: messageId,
                 timestamp: new Date().toISOString(),
-                bpp_id: disbursedLoan.Response.context.bpp_id,
+                bpp_id: disbursedLoan.context.bpp_id,
                 ttl: "PT30S"
             },
             message: {
@@ -44,7 +44,7 @@ class IssueRequestUtils {
                         }
                     },
                     order_details: {
-                        id: disbursedLoan.Response.message.order.id,
+                        id: disbursedLoan.message.order.id,
                         state: "Completed",
                         provider_id: disbursedLoan.providerId
                     },
@@ -55,7 +55,7 @@ class IssueRequestUtils {
                     category: "LOAN",
                     issue_type: "ISSUE",
                     source: {
-                        network_participant_id: disbursedLoan.Response.context.bap_id,
+                        network_participant_id: disbursedLoan.context.bap_id,
                         type: "CONSUMER"
                     },
                     expected_response_time: {

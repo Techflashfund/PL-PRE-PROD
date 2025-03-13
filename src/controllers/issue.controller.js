@@ -6,6 +6,7 @@ const IssueService = require('../services/issue.service');
 const IssueMessageIds = require('../models/issuemessageids.model');
 const IssueStatus = require('../models/issuestatus.mode');
 const Transaction=require('../models/transaction.model');
+const SelectThree=require('../models/selectThree.model')
 
 const TempData = require('../models/tempdata');
 
@@ -22,12 +23,23 @@ class IssueController {
             } = req.body;
 
             const loan = await DisbursedLoan.findOne({ transactionId });
+            let loanress=null
+            if(loan){
+                loanress=loan.Response
+            }
+            
+            let selectThreeData = null;
+            let selectresss=null
             if (!loan) {
-                return res.status(404).json({ error: 'Loan not found' });
+                selectThreeData = await SelectThree.findOne({ transactionId });
+                selectresss=selectThreeData.selectPayload
+                if (!selectThreeData) {
+                    return res.status(404).json({ error: 'Transaction not found in DisbursedLoan or SelectThree' });
+                }
             }
             
             
-            const issuePayload =await IssueRequestUtils.createIssuePayload(loan, {
+            const issuePayload =await IssueRequestUtils.createIssuePayload(loanress ||  selectresss, {
                 name, phone, email, shortDesc, longDesc
             });
 
