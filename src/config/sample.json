@@ -1,388 +1,378 @@
-{
-  "_id": { "$oid": "67d2945df28ad8006beb4288" },
-  "status": "COMPLETED",
-  "transactionId": "899874f3-298e-4834-a8ba-4db3c6de9f07",
-  "providerId": "9a39b3e7-6c4b-4987-b7b5-62fbc4dec263",
-  "selectPayload": {
-    "context": {
-      "domain": "ONDC:FIS12",
-      "location": { "country": { "code": "IND" }, "city": { "code": "*" } },
-      "action": "select",
-      "version": "2.0.1",
-      "timestamp": "2025-03-13T08:16:27.907Z",
-      "ttl": "PT10M",
-      "bap_id": "pl.pr.flashfund.in",
-      "bap_uri": "https://pl.pr.flashfund.in/",
-      "bpp_id": "bfl.lenderbridge.uat.ignosis.ai",
-      "bpp_uri": "https://bfl.lenderbridge.uat.ignosis.ai/lender-bridge/ondc/bfl-preprod",
-      "transaction_id": "899874f3-298e-4834-a8ba-4db3c6de9f07",
-      "message_id": "e6c463a3-ee0d-4ec0-bb27-f4b4d4eba5d4"
-    },
-    "message": {
-      "order": {
-        "provider": { "id": "9a39b3e7-6c4b-4987-b7b5-62fbc4dec263" },
-        "items": [
-          {
-            "id": "9b28b6e7-6c4b-4987-b7b5-62fbc4dec263",
-            "xinput": {
-              "form": { "id": "6z0ky1xf2j0cbff02jyf" },
-              "form_response": {
-                "status": "SUCCESS",
-                "submission_id": "01958e93-848f-149b-d439-daffe1252241"
-              }
-            }
-          }
-        ]
-      }
-    }
-  },
-  "selectResponse": {
-    "success": true,
-    "data": { "message": { "ack": { "status": "ACK" } } }
-  },
-  "createdAt": { "$date": { "$numberLong": "1741853789045" } },
-  "updatedAt": { "$date": { "$numberLong": "1741853790142" } },
-  "__v": { "$numberInt": "0" },
-  "amountformurl": "https://bfl.lenderbridge.uat.ignosis.ai/lender-bridge/ondc/bfl-preprod/public/information/form/offer-update/72zwyzkhwwr5g2b8jfgd",
-  "formId": "72zwyzkhwwr5g2b8jfgd",
-  "loanOffer": {
-    "amount": { "value": "82903.8", "currency": "INR" },
-    "interestRate": "14.0%",
-    "term": "6 Months",
-    "interestRateType": "FIXED",
-    "fees": {
-      "application": "2725.80 INR",
-      "foreclosure": "2",
-      "interestRateConversion": "Not Applicable",
-      "delayPenalty": "2% (p.m.)",
-      "otherPenalty": "0"
-    },
-    "annualPercentageRate": "26.76%",
-    "repayment": {
-      "frequency": "MONTHLY",
-      "installments": "6",
-      "amount": "13363"
-    },
-    "quote": {
-      "id": "01958e93-8b3a-b6fe-6f52-7c6cc5c1741b",
-      "principal": "77000.0",
-      "interest": "3178.0",
-      "processingFee": "2725.80",
-      "upfrontCharges": "0",
-      "insuranceCharges": "0",
-      "netDisbursedAmount": "74274.20",
-      "otherCharges": "0",
-      "ttl": "P30D"
-    },
-    "documents": { "tncLink": "https://www.bajajfinserv.in/privacy-policy" },
-    "coolOffPeriod": "P3D Days"
-  },
-  "onselectRequest": {
-    "context": {
-      "domain": "ONDC:FIS12",
-      "location": { "country": { "code": "IND" }, "city": { "code": "*" } },
-      "action": "on_select",
-      "version": "2.0.1",
-      "timestamp": "2025-03-13T08:16:29.191Z",
-      "ttl": "PT10M",
-      "bap_id": "pl.pr.flashfund.in",
-      "bap_uri": "https://pl.pr.flashfund.in/",
-      "bpp_id": "bfl.lenderbridge.uat.ignosis.ai",
-      "bpp_uri": "https://bfl.lenderbridge.uat.ignosis.ai/lender-bridge/ondc/bfl-preprod",
-      "transaction_id": "899874f3-298e-4834-a8ba-4db3c6de9f07",
-      "message_id": "e6c463a3-ee0d-4ec0-bb27-f4b4d4eba5d4"
-    },
-    "message": {
-      "order": {
-        "items": [
-          {
-            "price": { "currency": "INR", "value": "82903.8" },
-            "id": "9b28b6e7-6c4b-4987-b7b5-62fbc4dec263",
-            "descriptor": { "name": "Personal Loan", "code": "PERSONAL_LOAN" },
-            "tags": [
-              {
-                "list": [
-                  {
-                    "descriptor": {
-                      "name": "Foreclosure Penalty",
-                      "code": "FORECLOSURE_FEE",
-                      "short_desc": "Loan Foreclosure Penalty"
-                    },
-                    "value": "2"
+[
+  {
+      "lenderId": "c29d8cf3-5eeb-4aac-9eff-f5fadfd4dbc3",
+      "lenderName": "ONDC Bank",
+      "lenderImageUrl": "https://ondc.org/assets/theme/images/ondc_registered_logo.svg?v=399788fda7",
+      
+      "ondcResponse": {
+          "context": {
+              "domain": "ONDC:FIS12",
+              "location": {
+                  "country": {
+                      "code": "IND"
                   },
-                  {
-                    "descriptor": {
-                      "name": "Interest rate conversion charges",
-                      "code": "INTEREST_RATE_CONVERSION_CHARGE"
-                    },
-                    "value": "Not Applicable"
-                  },
-                  {
-                    "descriptor": {
-                      "name": "Delayed payments penalty",
-                      "code": "DELAY_PENALTY_FEE",
-                      "short_desc": "Delayed payments penalty"
-                    },
-                    "value": "2% (p.m.)"
-                  },
-                  {
-                    "descriptor": {
-                      "name": "Other penalty charges",
-                      "code": "OTHER_PENALTY_FEE",
-                      "short_desc": "Other penalty charges"
-                    },
-                    "value": "0"
-                  },
-                  {
-                    "descriptor": {
-                      "name": "cool off period",
-                      "code": "COOL_OFF_PERIOD",
-                      "short_desc": "Cooling off/look-up period during which borrower shall not be charged any penalty on prepayment of loan"
-                    },
-                    "value": "P3D Days"
-                  },
-                  {
-                    "descriptor": {
-                      "name": "Terms and Conditions",
-                      "code": "TNC_LINK",
-                      "short_desc": "Terms and Conditions"
-                    },
-                    "value": "https://www.bajajfinserv.in/privacy-policy"
-                  },
-                  {
-                    "descriptor": {
-                      "name": "Interest Rate",
-                      "code": "INTEREST_RATE",
-                      "short_desc": "Interest rate  14.0% per YEAR"
-                    },
-                    "value": "14.0%"
-                  },
-                  {
-                    "descriptor": {
-                      "name": "Loan Term",
-                      "code": "TERM",
-                      "short_desc": "Loans Duration 6 Months"
-                    },
-                    "value": "6 Months"
-                  },
-                  {
-                    "descriptor": {
-                      "name": "Interest rate type",
-                      "code": "INTEREST_RATE_TYPE",
-                      "short_desc": "Fixed Interest type"
-                    },
-                    "value": "FIXED"
-                  },
-                  {
-                    "descriptor": {
-                      "name": "Application Fees",
-                      "code": "APPLICATION_FEE"
-                    },
-                    "value": "2725.80 INR"
-                  },
-                  {
-                    "descriptor": {
-                      "name": "Annual Percentage Rate",
-                      "code": "ANNUAL_PERCENTAGE_RATE",
-                      "short_desc": "Annual Interest rate  26.76% per YEAR"
-                    },
-                    "value": "26.76%"
-                  },
-                  {
-                    "descriptor": {
-                      "name": "Repayment Frequency",
-                      "code": "REPAYMENT_FREQUENCY",
-                      "short_desc": "Repayment Frequency by borrower"
-                    },
-                    "value": "MONTHLY"
-                  },
-                  {
-                    "descriptor": {
-                      "name": "Number of installments of repayment",
-                      "code": "NUMBER_OF_INSTALLMENTS_OF_REPAYMENT",
-                      "short_desc": "Number of installments borrower has to make to payback the loan"
-                    },
-                    "value": "6"
-                  },
-                  {
-                    "descriptor": {
-                      "name": "Installment amount",
-                      "code": "INSTALLMENT_AMOUNT",
-                      "short_desc": "Each installment amount of repayment"
-                    },
-                    "value": "13363"
-                  },
-                  {
-                    "descriptor": {
-                      "name": "Key Facts Statement Link",
-                      "code": "KFS_LINK",
-                      "short_desc": "A link provided to a Key Fact Statement (KFS) document related to a loan."
-                    },
-                    "value": "https://bfl.lenderbridge.uat.ignosis.ai/lender-bridge/ui/api/public/bfl-preprod/kfs/899874f3-298e-4834-a8ba-4db3c6de9f07?"
+                  "city": {
+                      "code": "*"
                   }
-                ],
-                "descriptor": {
-                  "name": "Loan Information",
-                  "code": "LOAN_INFO"
-                },
-                "display": true
-              }
-            ],
-            "xinput": {
-              "head": {
-                "descriptor": { "name": "Set Loan Amount" },
-                "index": {
-                  "min": { "$numberInt": "0" },
-                  "cur": { "$numberInt": "0" },
-                  "max": { "$numberInt": "1" }
-                },
-                "headings": ["Set Loan Amount", "Know your Customer"]
               },
-              "form": {
-                "id": "72zwyzkhwwr5g2b8jfgd",
-                "mime_type": "text/html",
-                "url": "https://bfl.lenderbridge.uat.ignosis.ai/lender-bridge/ondc/bfl-preprod/public/information/form/offer-update/72zwyzkhwwr5g2b8jfgd",
-                "resubmit": false,
-                "multiple_sumbissions": false
-              },
-              "required": true
-            }
-          }
-        ],
-        "provider": {
-          "id": "9a39b3e7-6c4b-4987-b7b5-62fbc4dec263",
-          "descriptor": {
-            "images": [
-              {
-                "url": "https://kbl.lenderbridge.uat.ignosis.ai/bfl_logo.png",
-                "size_type": "sm"
-              }
-            ],
-            "name": "Bajaj Finserv Limited",
-            "short_desc": "Bajaj Finserv Limited",
-            "long_desc": "Bajaj Finserv Limited"
+              "action": "on_select",
+              "version": "2.0.1",
+              "bap_uri": "https://pl.pr.flashfund.in/",
+              "bap_id": "pl.pr.flashfund.in",
+              "ttl": "PT10M",
+              "timestamp": "2025-03-17T05:42:25.177Z",
+              "transaction_id": "16d6604e-342b-4a3f-8007-8ca7dd6c758b",
+              "message_id": "1f2f7467-01ba-475d-a4ae-b5897dfe9b9b",
+              "bpp_id": "pramaan.ondc.org/beta/preprod/mock/seller",
+              "bpp_uri": "https://pramaan.ondc.org/beta/preprod/mock/seller"
           },
-          "tags": [
-            {
-              "list": [
-                {
-                  "descriptor": { "name": "Gro name", "code": "GRO_NAME" },
-                  "value": "Bajaj GRO"
-                },
-                {
-                  "descriptor": { "name": "Gro email", "code": "GRO_EMAIL" },
-                  "value": "gro@bajaj.in"
-                },
-                {
-                  "descriptor": {
-                    "name": "Gro contact number",
-                    "code": "GRO_CONTACT_NUMBER"
+          "message": {
+              "order": {
+                  "provider": {
+                      "id": "c29d8cf3-5eeb-4aac-9eff-f5fadfd4dbc3",
+                      "descriptor": {
+                          "images": [
+                              {
+                                  "size_type": "sm",
+                                  "url": "https://ondc.org/assets/theme/images/ondc_registered_logo.svg?v=399788fda7"
+                              }
+                          ],
+                          "long_desc": "ONDC Bank Ltd, India.",
+                          "name": "ONDC Bank",
+                          "short_desc": "Ondc Bank Ltd"
+                      },
+                      "tags": [
+                          {
+                              "descriptor": {
+                                  "code": "CONTACT_INFO",
+                                  "name": "Contact Info"
+                              },
+                              "list": [
+                                  {
+                                      "descriptor": {
+                                          "code": "GRO_NAME",
+                                          "name": "Gro name"
+                                      },
+                                      "value": "ONDC"
+                                  },
+                                  {
+                                      "descriptor": {
+                                          "code": "GRO_EMAIL",
+                                          "name": "Gro email"
+                                      },
+                                      "value": "lifeline@ondc.com"
+                                  },
+                                  {
+                                      "descriptor": {
+                                          "code": "GRO_CONTACT_NUMBER",
+                                          "name": "Gro contact number"
+                                      },
+                                      "value": "1860 266 7766"
+                                  },
+                                  {
+                                      "descriptor": {
+                                          "code": "GRO_DESIGNATION",
+                                          "name": "Gro Designation"
+                                      },
+                                      "value": "Nodal Grievance Redressal Officer"
+                                  },
+                                  {
+                                      "descriptor": {
+                                          "code": "GRO_ADDRESS",
+                                          "name": "Gro Address"
+                                      },
+                                      "value": "One Indiabulls centre, Tower 1, 18th Floor Jupiter mill compound 841, Senapati Bapat Marg, Elphinstone Road, Mumbai 400013"
+                                  },
+                                  {
+                                      "descriptor": {
+                                          "code": "CUSTOMER_SUPPORT_LINK",
+                                          "name": "Customer support link"
+                                      },
+                                      "value": "https://buy.ondc.org/buy/GrievanceRedStep.htm?execution=e1s1"
+                                  },
+                                  {
+                                      "descriptor": {
+                                          "code": "CUSTOMER_SUPPORT_CONTACT_NUMBER",
+                                          "name": "Customer support contact number"
+                                      },
+                                      "value": "1800 1080"
+                                  },
+                                  {
+                                      "descriptor": {
+                                          "code": "CUSTOMER_SUPPORT_EMAIL",
+                                          "name": "Customer support email"
+                                      },
+                                      "value": "customer.care@ondc.com"
+                                  }
+                              ]
+                          },
+                          {
+                              "descriptor": {
+                                  "code": "LSP_INFO",
+                                  "name": "Lsp Info"
+                              },
+                              "list": [
+                                  {
+                                      "descriptor": {
+                                          "code": "LSP_NAME",
+                                          "name": "Lsp name"
+                                      },
+                                      "value": "ONDC_BANK_LSP"
+                                  },
+                                  {
+                                      "descriptor": {
+                                          "code": "LSP_EMAIL",
+                                          "name": "Lsp email"
+                                      },
+                                      "value": "lsp@ondcbank.com"
+                                  },
+                                  {
+                                      "descriptor": {
+                                          "code": "LSP_CONTACT_NUMBER",
+                                          "name": "Lsp contact number"
+                                      },
+                                      "value": "1860 266 7766"
+                                  },
+                                  {
+                                      "descriptor": {
+                                          "code": "LSP_ADDRESS",
+                                          "name": "Lsp Address"
+                                      },
+                                      "value": "One Indiabulls centre, Tower 1, 18th Floor Jupiter mill compound 841, Senapati Bapat Marg, Elphinstone Road, Mumbai 400013"
+                                  }
+                              ]
+                          }
+                      ]
                   },
-                  "value": "180012555656"
-                },
-                {
-                  "descriptor": {
-                    "name": "Gro Designation",
-                    "code": "GRO_DESIGNATION"
-                  },
-                  "value": "Bajaj GRO Resolution"
-                },
-                {
-                  "descriptor": {
-                    "name": "Gro Address",
-                    "code": "GRO_ADDRESS"
-                  },
-                  "value": "neta office, kalka nagar, pune."
-                },
-                {
-                  "descriptor": {
-                    "name": "Customer support link",
-                    "code": "CUSTOMER_SUPPORT_LINK"
-                  },
-                  "value": "https://www.bajajfinserv.in/how-to-complain"
-                },
-                {
-                  "descriptor": {
-                    "name": "Customer support contact",
-                    "code": "CUSTOMER_SUPPORT_CONTACT_NUMBER"
-                  },
-                  "value": "180012555656"
-                },
-                {
-                  "descriptor": {
-                    "name": "Customer support email",
-                    "code": "CUSTOMER_SUPPORT_EMAIL"
-                  },
-                  "value": "gro@bajaj.in"
-                }
-              ],
-              "descriptor": { "name": "Contact Info", "code": "CONTACT_INFO" }
-            },
-            {
-              "list": [
-                {
-                  "descriptor": { "name": "Lsp name", "code": "LSP_NAME" },
-                  "value": "Bajaj GRO"
-                },
-                {
-                  "descriptor": { "name": "Lsp email", "code": "LSP_EMAIL" },
-                  "value": "gro@bajaj.in"
-                },
-                {
-                  "descriptor": {
-                    "name": "Lsp contact number",
-                    "code": "LSP_CONTACT_NUMBER"
-                  },
-                  "value": "180012555656"
-                },
-                {
-                  "descriptor": {
-                    "name": "Lsp Address",
-                    "code": "LSP_ADDRESS"
-                  },
-                  "value": "neta office, kalka nagar, pune."
-                }
-              ],
-              "descriptor": { "name": "Lsp Info", "code": "LSP_INFO" }
-            }
-          ]
-        },
-        "quote": {
-          "id": "01958e93-8b3a-b6fe-6f52-7c6cc5c1741b",
-          "price": { "currency": "INR", "value": "82903.8" },
-          "breakup": [
-            {
-              "title": "PRINCIPAL",
-              "price": { "currency": "INR", "value": "77000.0" }
-            },
-            {
-              "title": "INTEREST",
-              "price": { "currency": "INR", "value": "3178.0" }
-            },
-            {
-              "title": "PROCESSING_FEE",
-              "price": { "currency": "INR", "value": "2725.80" }
-            },
-            {
-              "title": "INSURANCE_CHARGES",
-              "price": { "currency": "INR", "value": "0" }
-            },
-            {
-              "title": "OTHER_CHARGES",
-              "price": { "currency": "INR", "value": "0" }
-            },
-            {
-              "title": "NET_DISBURSED_AMOUNT",
-              "price": { "currency": "INR", "value": "74274.20" }
-            },
-            {
-              "title": "OTHER_UPFRONT_CHARGES",
-              "price": { "currency": "INR", "value": "0" }
-            }
-          ],
-          "ttl": "P30D"
-        }
+                  "items": [
+                      {
+                          "id": "3b55859a-0d94-427e-b1ef-9deab8cb6928",
+                          "descriptor": {
+                              "code": "PERSONAL_LOAN",
+                              "name": "Personal Loan"
+                          },
+                          "price": {
+                              "currency": "INR",
+                              "value": "442300"
+                          },
+                          "tags": [
+                              {
+                                  "descriptor": {
+                                      "code": "LOAN_INFO",
+                                      "name": "Loan Information"
+                                  },
+                                  "list": [
+                                      {
+                                          "descriptor": {
+                                              "code": "INTEREST_RATE",
+                                              "name": "Interest Rate",
+                                              "short_desc": "Loans starting from 12% (p.a)"
+                                          },
+                                          "value": "12%"
+                                      },
+                                      {
+                                          "descriptor": {
+                                              "code": "TERM",
+                                              "name": "Loan Term",
+                                              "short_desc": "Loans Duration 5 months"
+                                          },
+                                          "value": "5 months"
+                                      },
+                                      {
+                                          "descriptor": {
+                                              "code": "INTEREST_RATE_TYPE",
+                                              "name": "Interest rate type",
+                                              "short_desc": "Fixed Interest type"
+                                          },
+                                          "value": "FIXED"
+                                      },
+                                      {
+                                          "descriptor": {
+                                              "code": "APPLICATION_FEE",
+                                              "name": "Application Fees",
+                                              "short_desc": "Application Fee"
+                                          },
+                                          "value": "0"
+                                      },
+                                      {
+                                          "descriptor": {
+                                              "code": "FORECLOSURE_FEE",
+                                              "name": "Foreclosure Penalty",
+                                              "short_desc": "Loan Foreclosure Penalty"
+                                          },
+                                          "value": "0.5%"
+                                      },
+                                      {
+                                          "descriptor": {
+                                              "code": "INTEREST_RATE_CONVERSION_CHARGE",
+                                              "name": "interest rate conversion charges",
+                                              "short_desc": "interest rate conversion charges"
+                                          },
+                                          "value": "0"
+                                      },
+                                      {
+                                          "descriptor": {
+                                              "code": "DELAY_PENALTY_FEE",
+                                              "name": "Delayed payments penalty",
+                                              "short_desc": "Delayed payments penalty"
+                                          },
+                                          "value": "5%"
+                                      },
+                                      {
+                                          "descriptor": {
+                                              "code": "OTHER_PENALTY_FEE",
+                                              "name": "Other Penal Charges",
+                                              "short_desc": "Other Penal Charges"
+                                          },
+                                          "value": "1%"
+                                      },
+                                      {
+                                          "descriptor": {
+                                              "code": "ANNUAL_PERCENTAGE_RATE",
+                                              "name": "Annual Percentage Rate",
+                                              "short_desc": "Effective annualized interest rate in percentage computed on net disbursed amount using IRR approach and reducing balance method"
+                                          },
+                                          "value": "5%"
+                                      },
+                                      {
+                                          "descriptor": {
+                                              "code": "REPAYMENT_FREQUENCY",
+                                              "name": "Repayment Frequency",
+                                              "short_desc": "Repayment Frequency by borrower"
+                                          },
+                                          "value": "MONTHLY"
+                                      },
+                                      {
+                                          "descriptor": {
+                                              "code": "NUMBER_OF_INSTALLMENTS_OF_REPAYMENT",
+                                              "name": "Number of installments of repayment",
+                                              "short_desc": "Number of installments borrower has to make to payback the loan"
+                                          },
+                                          "value": "5"
+                                      },
+                                      {
+                                          "descriptor": {
+                                              "code": "TNC_LINK",
+                                              "name": "Terms & Conditions",
+                                              "short_desc": "Terms and Conditions"
+                                          },
+                                          "value": "https://pramaan.ondc.org/beta/preprod/mock/seller/document/tnc.pdf"
+                                      },
+                                      {
+                                          "descriptor": {
+                                              "code": "COOL_OFF_PERIOD",
+                                              "name": "cool off period",
+                                              "short_desc": "Cooling off/look-up period during which borrower shall not be charged any penalty"
+                                          },
+                                          "value": "PT5M"
+                                      },
+                                      {
+                                          "descriptor": {
+                                              "code": "INSTALLMENT_AMOUNT",
+                                              "name": "Installment amount",
+                                              "short_desc": "Each installment amount of repayment"
+                                          },
+                                          "value": "88460.00"
+                                      },
+                                      {
+                                          "descriptor": {
+                                              "code": "KFS_LINK",
+                                              "name": "Key Facts Statement Link",
+                                              "short_desc": "A link provided by the BPP points to a Key Fact Statement (KFS) document related to a loan. When accessed, the document is returned in text/html format, with the loan details organized in a standard HTML table. This format makes it easy for the buyer's app to read and reformat the information as needed."
+                                          },
+                                          "value": "https://pramaan.ondc.org/beta/preprod/mock/seller/document/tnc.pdf"
+                                      }
+                                  ],
+                                  "display": true
+                              }
+                          ],
+                          "xinput": {
+                              "head": {
+                                  "index": {
+                                      "min": 0,
+                                      "cur": 0,
+                                      "max": 1
+                                  },
+                                  "headings": [
+                                      "Set Loan Amount",
+                                      "Know your Customer"
+                                  ],
+                                  "descriptor": {
+                                      "name": "Customer Information"
+                                  }
+                              },
+                              "form": {
+                                  "id": "c4c083a1-faab-49cd-ab63-29be855dd0b6",
+                                  "mime_type": "text/html",
+                                  "url": "https://pramaan.ondc.org/beta/preprod/mock/seller/form/get/c4c083a1-faab-49cd-ab63-29be855dd0b6",
+                                  "resubmit": false,
+                                  "multiple_sumbissions": false
+                              },
+                              "required": true
+                          }
+                      }
+                  ],
+                  "quote": {
+                      "id": "ee1ededc-99b9-4c84-b049-5e23de1a5ce2",
+                      "price": {
+                          "currency": "INR",
+                          "value": "442300"
+                      },
+                      "breakup": [
+                          {
+                              "title": "PRINCIPAL",
+                              "price": {
+                                  "value": "400000",
+                                  "currency": "INR"
+                              }
+                          },
+                          {
+                              "title": "INTEREST",
+                              "price": {
+                                  "value": "40000",
+                                  "currency": "INR"
+                              }
+                          },
+                          {
+                              "title": "PROCESSING_FEE",
+                              "price": {
+                                  "value": "1800",
+                                  "currency": "INR"
+                              }
+                          },
+                          {
+                              "title": "OTHER_UPFRONT_CHARGES",
+                              "price": {
+                                  "value": "0",
+                                  "currency": "INR"
+                              }
+                          },
+                          {
+                              "title": "INSURANCE_CHARGES",
+                              "price": {
+                                  "value": "500",
+                                  "currency": "INR"
+                              }
+                          },
+                          {
+                              "title": "NET_DISBURSED_AMOUNT",
+                              "price": {
+                                  "value": "397700",
+                                  "currency": "INR"
+                              }
+                          },
+                          {
+                              "title": "OTHER_CHARGES",
+                              "price": {
+                                  "value": "0",
+                                  "currency": "INR"
+                              }
+                          }
+                      ],
+                      "ttl": "P29D"
+                  }
+              }
+          }
       }
-    }
   }
-}
+]
