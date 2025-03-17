@@ -36,6 +36,7 @@ class OffersController {
                     processingFee: record.loanOffer.fees.application,
                     foreclosureFee: record.loanOffer.fees.foreclosure,
                     annualPercentageRate: record.loanOffer.annualPercentageRate,
+                    ondcResponse: record.onselectRequest // Include the full ONDC response
                 };
             });
 
