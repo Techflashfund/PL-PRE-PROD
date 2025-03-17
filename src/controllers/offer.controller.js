@@ -110,7 +110,7 @@ class OffersController {
                     quoteValidityPeriod: quote?.ttl || null,
                     
                     // Reference to original data
-                    
+                    originalRequest: record.onselectRequest
                 };
             });
 
