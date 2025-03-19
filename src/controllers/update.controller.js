@@ -39,7 +39,8 @@ class UpdateController{
                 return res.status(200).json({
                     transactionId,
                     paymentUrl: paymentLink.paymentUrl,
-                    paymentDetails: paymentLink.paymentDetails
+                    paymentDetails: paymentLink.paymentDetails,
+                    details:paymentLink.Response
                 });
             }
     
@@ -80,6 +81,7 @@ class UpdateController{
                         $set: {
                             orderId: order.id,
                             paymentUrl: foreclosurePayment.url,
+                            Response:req.body,
                             paymentDetails: {
                                 amount: foreclosurePayment.params.amount,
                                 currency: foreclosurePayment.params.currency,
@@ -105,6 +107,7 @@ class UpdateController{
                         $set: {
                             orderId: order.id,
                             paymentUrl: missedEmiPayment.url,
+                            Response:req.body,
                             paymentDetails: {
                                 amount: missedEmiPayment.params.amount,
                                 currency: missedEmiPayment.params.currency,
@@ -130,6 +133,7 @@ class UpdateController{
                         $set: {
                             orderId: order.id,
                             paymentUrl: prePartPayment.url,
+                            Response:req.body,
                             paymentDetails: {
                                 amount: prePartPayment.params.amount,
                                 currency: prePartPayment.params.currency,

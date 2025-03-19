@@ -11,7 +11,11 @@ const prePartPaymentLinksSchema = new mongoose.Schema({
         amount: String,
         currency: String,
         status: String
-    }
+    },
+    Response: {
+        type: Object,
+        required: true
+    },
 }, {
     timestamps: true
 });

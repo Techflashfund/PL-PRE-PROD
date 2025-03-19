@@ -15,7 +15,11 @@ const foreclosureLinksSchema = new mongoose.Schema({
     generatedAt: {
         type: Date,
         default: Date.now
+    },Response: {
+        type: Object,
+        required: true
     }
+    
 }, {
     timestamps: true
 });

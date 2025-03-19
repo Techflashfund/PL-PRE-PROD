@@ -7,6 +7,10 @@ const missedEmiLinksSchema = new mongoose.Schema({
     },
     orderId: String,
     paymentUrl: String,
+    Response: {
+        type: Object,
+        required: true
+    },
     paymentDetails: {
         amount: String,
         currency: String,
