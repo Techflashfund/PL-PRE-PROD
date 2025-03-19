@@ -485,84 +485,85 @@ class StatusController {
                   transactionId: transaction.transactionId
               });
 
-              if (!loan || !loan.Response) return null;
+              if (!loan?.Response?.message?.order) return null;
 
-              const response = loan.Response;
-              const order = response.message.order;
+              const order = loan.Response.message.order;
 
-              // Extract provider details
+              // Safely extract provider details
               const provider = {
-                  id: order.provider.id,
-                  name: order.provider.descriptor.name,
-                  description: order.provider.descriptor.short_desc,
-                  logo: order.provider.descriptor.images?.[0]?.url,
+                  id: order.provider?.id || '',
+                  name: order.provider?.descriptor?.name || '',
+                  description: order.provider?.descriptor?.short_desc || '',
+                  logo: order.provider?.descriptor?.images?.[0]?.url || '',
                   contact: {
                       gro: {
-                          name: order.provider.tags?.[0]?.list?.find(i => i.descriptor.code === "GRO_NAME")?.value,
-                          email: order.provider.tags?.[0]?.list?.find(i => i.descriptor.code === "GRO_EMAIL")?.value,
-                          phone: order.provider.tags?.[0]?.list?.find(i => i.descriptor.code === "GRO_CONTACT_NUMBER")?.value
+                          name: order.provider?.tags?.[0]?.list?.find(i => i?.descriptor?.code === "GRO_NAME")?.value || '',
+                          email: order.provider?.tags?.[0]?.list?.find(i => i?.descriptor?.code === "GRO_EMAIL")?.value || '',
+                          phone: order.provider?.tags?.[0]?.list?.find(i => i?.descriptor?.code === "GRO_CONTACT_NUMBER")?.value || ''
                       },
                       support: {
-                          link: order.provider.tags?.[0]?.list?.find(i => i.descriptor.code === "CUSTOMER_SUPPORT_LINK")?.value,
-                          phone: order.provider.tags?.[0]?.list?.find(i => i.descriptor.code === "CUSTOMER_SUPPORT_CONTACT_NUMBER")?.value,
-                          email: order.provider.tags?.[0]?.list?.find(i => i.descriptor.code === "CUSTOMER_SUPPORT_EMAIL")?.value
+                          link: order.provider?.tags?.[0]?.list?.find(i => i?.descriptor?.code === "CUSTOMER_SUPPORT_LINK")?.value || '',
+                          phone: order.provider?.tags?.[0]?.list?.find(i => i?.descriptor?.code === "CUSTOMER_SUPPORT_CONTACT_NUMBER")?.value || '',
+                          email: order.provider?.tags?.[0]?.list?.find(i => i?.descriptor?.code === "CUSTOMER_SUPPORT_EMAIL")?.value || ''
                       }
                   }
               };
 
-              // Extract loan details
-              const loanInfo = order.items[0].tags[0].list;
+              // Safely extract loan details
+              const loanInfo = order.items?.[0]?.tags?.[0]?.list || [];
               const loanDetails = {
-                  amount: order.items[0].price.value,
-                  currency: order.items[0].price.currency,
-                  term: loanInfo.find(i => i.descriptor.code === "TERM")?.value,
-                  interestRate: loanInfo.find(i => i.descriptor.code === "INTEREST_RATE")?.value,
-                  interestRateType: loanInfo.find(i => i.descriptor.code === "INTEREST_RATE_TYPE")?.value,
-                  installmentAmount: loanInfo.find(i => i.descriptor.code === "INSTALLMENT_AMOUNT")?.value,
-                  repaymentFrequency: loanInfo.find(i => i.descriptor.code === "REPAYMENT_FREQUENCY")?.value,
-                  numberOfInstallments: loanInfo.find(i => i.descriptor.code === "NUMBER_OF_INSTALLMENTS_OF_REPAYMENT")?.value
+                  amount: order.items?.[0]?.price?.value || '',
+                  currency: order.items?.[0]?.price?.currency || 'INR',
+                  term: loanInfo.find(i => i?.descriptor?.code === "TERM")?.value || '',
+                  interestRate: loanInfo.find(i => i?.descriptor?.code === "INTEREST_RATE")?.value || '',
+                  interestRateType: loanInfo.find(i => i?.descriptor?.code === "INTEREST_RATE_TYPE")?.value || '',
+                  installmentAmount: loanInfo.find(i => i?.descriptor?.code === "INSTALLMENT_AMOUNT")?.value || '',
+                  repaymentFrequency: loanInfo.find(i => i?.descriptor?.code === "REPAYMENT_FREQUENCY")?.value || '',
+                  numberOfInstallments: loanInfo.find(i => i?.descriptor?.code === "NUMBER_OF_INSTALLMENTS_OF_REPAYMENT")?.value || ''
               };
 
-              // Extract charges and fees
+              // Safely extract charges
               const charges = {
-                  applicationFee: loanInfo.find(i => i.descriptor.code === "APPLICATION_FEE")?.value,
-                  foreclosureFee: loanInfo.find(i => i.descriptor.code === "FORECLOSURE_FEE")?.value,
-                  conversionCharge: loanInfo.find(i => i.descriptor.code === "INTEREST_RATE_CONVERSION_CHARGE")?.value,
-                  delayPenalty: loanInfo.find(i => i.descriptor.code === "DELAY_PENALTY_FEE")?.value,
-                  otherPenalty: loanInfo.find(i => i.descriptor.code === "OTHER_PENALTY_FEE")?.value
+                  applicationFee: loanInfo.find(i => i?.descriptor?.code === "APPLICATION_FEE")?.value || '',
+                  foreclosureFee: loanInfo.find(i => i?.descriptor?.code === "FORECLOSURE_FEE")?.value || '',
+                  conversionCharge: loanInfo.find(i => i?.descriptor?.code === "INTEREST_RATE_CONVERSION_CHARGE")?.value || '',
+                  delayPenalty: loanInfo.find(i => i?.descriptor?.code === "DELAY_PENALTY_FEE")?.value || '',
+                  otherPenalty: loanInfo.find(i => i?.descriptor?.code === "OTHER_PENALTY_FEE")?.value || ''
               };
 
-              // Extract payment breakdown
-              const breakdown = order.quote.breakup.reduce((acc, item) => {
-                  acc[item.title.toLowerCase()] = {
-                      amount: item.price.value,
-                      currency: item.price.currency
-                  };
+              // Safely extract payment breakdown
+              const breakdown = (order.quote?.breakup || []).reduce((acc, item) => {
+                  if (item?.title && item?.price) {
+                      acc[item.title.toLowerCase()] = {
+                          amount: item.price.value || '',
+                          currency: item.price.currency || 'INR'
+                      };
+                  }
                   return acc;
               }, {});
 
-              // Extract payment schedule
-              const payments = order.payments
-                  .filter(p => p.type === "POST_FULFILLMENT")
+              // Safely extract payment schedule
+              const payments = (order.payments || [])
+                  .filter(p => p && p.type === "POST_FULFILLMENT" && p.params && p.time)
                   .map(p => ({
-                      installmentId: p.id,
-                      amount: p.params.amount,
-                      currency: p.params.currency,
-                      status: p.status,
-                      dueDate: p.time.range.end,
-                      startDate: p.time.range.start
+                      installmentId: p.id || '',
+                      amount: p.params.amount || '',
+                      currency: p.params.currency || 'INR',
+                      status: p.status || 'UNKNOWN',
+                      dueDate: p.time?.range?.end || '',
+                      startDate: p.time?.range?.start || ''
                   }));
 
-              // Extract fulfillment status
-              const fulfillmentStatus = order.fulfillments[0]?.state?.descriptor?.code || 'UNKNOWN';
+              // Safely extract fulfillment status
+              const fulfillmentStatus = order.fulfillments?.[0]?.state?.descriptor?.code || 'UNKNOWN';
 
-              // Extract documents
-              const documents = order.documents?.map(doc => ({
-                  type: doc.descriptor.code,
-                  name: doc.descriptor.name,
-                  description: doc.descriptor.short_desc,
-                  url: doc.url
-              })) || [];
+              // Safely extract documents
+              const documents = (order.documents || []).map(doc => ({
+                  type: doc?.descriptor?.code || '',
+                  name: doc?.descriptor?.name || '',
+                  description: doc?.descriptor?.short_desc || '',
+                  url: doc?.url || ''
+              }));
 
               return {
                   transactionId: transaction.transactionId,
@@ -573,7 +574,7 @@ class StatusController {
                   payments,
                   fulfillmentStatus,
                   documents,
-                  lastUpdated: response.context.timestamp
+                  lastUpdated: loan.Response.context?.timestamp || new Date().toISOString()
               };
           })
       );
