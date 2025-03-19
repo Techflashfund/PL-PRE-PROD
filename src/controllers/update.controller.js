@@ -34,7 +34,8 @@ class UpdateController{
             } else if (type === 'prepayment') {
                 paymentLink = await PrePartPaymentLinks.findOne({ transactionId });
             }
-    
+            console.log('paymentLink',paymentLink.Response);
+            
             if (paymentLink) {
                 return res.status(200).json({
                     transactionId,
