@@ -421,28 +421,23 @@ class StatusController {
 
         if (!transactions.length) {
             return res.status(404).json({
-                message: "No transactions found for this user",
+                message: "No transactions found for this user"
             });
         }
 
-        // Track transactions in both collections and those only in transactions
+        // Track transactions in both collections
         const validTransactions = [];
         const rejectedTransactions = [];
 
         // Check which transactions exist in DisbursedLoans
         for (const transaction of transactions) {
             const loan = await DisbursedLoan.findOne({
-                transactionId: transaction.transactionId,
+                transactionId: transaction.transactionId
             });
 
             if (loan) {
-                // Transaction exists in both collections
-                validTransactions.push({
-                    transaction,
-                    loan
-                });
+                validTransactions.push({ transaction, loan });
             } else {
-                // Transaction exists only in Transaction collection
                 rejectedTransactions.push(transaction);
             }
         }
@@ -454,143 +449,166 @@ class StatusController {
             });
         }
 
-        // Send status requests only for valid transactions
+        // Send status requests for valid transactions
         await Promise.all(
             validTransactions.map(async ({ transaction, loan }) => {
-                const { context } = loan.Response;
-
                 const statusPayload = {
                     context: {
-                        ...context,
+                        ...loan.Response.context,
                         action: "status",
                         message_id: uuidv4(),
-                        timestamp: new Date().toISOString(),
+                        timestamp: new Date().toISOString()
                     },
                     message: {
-                        ref_id: transaction.transactionId,
-                    },
+                        ref_id: transaction.transactionId
+                    }
                 };
-
                 await statusRequest(statusPayload);
             })
         );
 
-        // Wait for 5 seconds
+        // Wait for responses
         await new Promise((resolve) => setTimeout(resolve, 5000));
 
         // Fetch updated loan details
         const updatedLoans = await Promise.all(
-          validTransactions.map(async ({ transaction }) => {
-              const loan = await DisbursedLoan.findOne({
-                  transactionId: transaction.transactionId
-              });
+            validTransactions.map(async ({ transaction }) => {
+                const loan = await DisbursedLoan.findOne({
+                    transactionId: transaction.transactionId
+                });
 
-              if (!loan?.Response?.message?.order) return null;
+                if (!loan?.Response?.message?.order) return null;
 
-              const order = loan.Response.message.order;
+                const order = loan.Response.message.order;
 
-              // Safely extract provider details
-              const provider = {
-                  id: order.provider?.id || '',
-                  name: order.provider?.descriptor?.name || '',
-                  description: order.provider?.descriptor?.short_desc || '',
-                  logo: order.provider?.descriptor?.images?.[0]?.url || '',
-                  contact: {
-                      gro: {
-                          name: order.provider?.tags?.[0]?.list?.find(i => i?.descriptor?.code === "GRO_NAME")?.value || '',
-                          email: order.provider?.tags?.[0]?.list?.find(i => i?.descriptor?.code === "GRO_EMAIL")?.value || '',
-                          phone: order.provider?.tags?.[0]?.list?.find(i => i?.descriptor?.code === "GRO_CONTACT_NUMBER")?.value || ''
-                      },
-                      support: {
-                          link: order.provider?.tags?.[0]?.list?.find(i => i?.descriptor?.code === "CUSTOMER_SUPPORT_LINK")?.value || '',
-                          phone: order.provider?.tags?.[0]?.list?.find(i => i?.descriptor?.code === "CUSTOMER_SUPPORT_CONTACT_NUMBER")?.value || '',
-                          email: order.provider?.tags?.[0]?.list?.find(i => i?.descriptor?.code === "CUSTOMER_SUPPORT_EMAIL")?.value || ''
-                      }
-                  }
-              };
+                // Extract provider details
+                const provider = {
+                    id: order.provider?.id || '',
+                    name: order.provider?.descriptor?.name || '',
+                    description: order.provider?.descriptor?.short_desc || '',
+                    logo: order.provider?.descriptor?.images?.[0]?.url || '',
+                    contact: {
+                        gro: {
+                            name: order.provider?.tags?.[0]?.list?.find(i => i?.descriptor?.code === "GRO_NAME")?.value || '',
+                            email: order.provider?.tags?.[0]?.list?.find(i => i?.descriptor?.code === "GRO_EMAIL")?.value || '',
+                            phone: order.provider?.tags?.[0]?.list?.find(i => i?.descriptor?.code === "GRO_CONTACT_NUMBER")?.value || ''
+                        },
+                        support: {
+                            link: order.provider?.tags?.[0]?.list?.find(i => i?.descriptor?.code === "CUSTOMER_SUPPORT_LINK")?.value || '',
+                            phone: order.provider?.tags?.[0]?.list?.find(i => i?.descriptor?.code === "CUSTOMER_SUPPORT_CONTACT_NUMBER")?.value || '',
+                            email: order.provider?.tags?.[0]?.list?.find(i => i?.descriptor?.code === "CUSTOMER_SUPPORT_EMAIL")?.value || ''
+                        }
+                    }
+                };
 
-              // Safely extract loan details
-              const loanInfo = order.items?.[0]?.tags?.[0]?.list || [];
-              const loanDetails = {
-                  amount: order.items?.[0]?.price?.value || '',
-                  currency: order.items?.[0]?.price?.currency || 'INR',
-                  term: loanInfo.find(i => i?.descriptor?.code === "TERM")?.value || '',
-                  interestRate: loanInfo.find(i => i?.descriptor?.code === "INTEREST_RATE")?.value || '',
-                  interestRateType: loanInfo.find(i => i?.descriptor?.code === "INTEREST_RATE_TYPE")?.value || '',
-                  installmentAmount: loanInfo.find(i => i?.descriptor?.code === "INSTALLMENT_AMOUNT")?.value || '',
-                  repaymentFrequency: loanInfo.find(i => i?.descriptor?.code === "REPAYMENT_FREQUENCY")?.value || '',
-                  numberOfInstallments: loanInfo.find(i => i?.descriptor?.code === "NUMBER_OF_INSTALLMENTS_OF_REPAYMENT")?.value || ''
-              };
+                // Extract loan details
+                const loanInfo = order.items?.[0]?.tags?.[0]?.list || [];
+                const loanDetails = {
+                    amount: order.items?.[0]?.price?.value || '',
+                    currency: order.items?.[0]?.price?.currency || 'INR',
+                    term: loanInfo.find(i => i?.descriptor?.code === "TERM")?.value || '',
+                    interestRate: loanInfo.find(i => i?.descriptor?.code === "INTEREST_RATE")?.value || '',
+                    interestRateType: loanInfo.find(i => i?.descriptor?.code === "INTEREST_RATE_TYPE")?.value || ''
+                };
 
-              // Safely extract charges
-              const charges = {
-                  applicationFee: loanInfo.find(i => i?.descriptor?.code === "APPLICATION_FEE")?.value || '',
-                  foreclosureFee: loanInfo.find(i => i?.descriptor?.code === "FORECLOSURE_FEE")?.value || '',
-                  conversionCharge: loanInfo.find(i => i?.descriptor?.code === "INTEREST_RATE_CONVERSION_CHARGE")?.value || '',
-                  delayPenalty: loanInfo.find(i => i?.descriptor?.code === "DELAY_PENALTY_FEE")?.value || '',
-                  otherPenalty: loanInfo.find(i => i?.descriptor?.code === "OTHER_PENALTY_FEE")?.value || ''
-              };
+                // Extract charges
+                const charges = {
+                    applicationFee: loanInfo.find(i => i?.descriptor?.code === "APPLICATION_FEE")?.value || '',
+                    foreclosureFee: loanInfo.find(i => i?.descriptor?.code === "FORECLOSURE_FEE")?.value || '',
+                    conversionCharge: loanInfo.find(i => i?.descriptor?.code === "INTEREST_RATE_CONVERSION_CHARGE")?.value || '',
+                    delayPenalty: loanInfo.find(i => i?.descriptor?.code === "DELAY_PENALTY_FEE")?.value || '',
+                    otherPenalty: loanInfo.find(i => i?.descriptor?.code === "OTHER_PENALTY_FEE")?.value || ''
+                };
 
-              // Safely extract payment breakdown
-              const breakdown = (order.quote?.breakup || []).reduce((acc, item) => {
-                  if (item?.title && item?.price) {
-                      acc[item.title.toLowerCase()] = {
-                          amount: item.price.value || '',
-                          currency: item.price.currency || 'INR'
-                      };
-                  }
-                  return acc;
-              }, {});
+                // Extract payment terms and schedule
+                const allPayments = order.payments || [];
 
-              // Safely extract payment schedule
-              const payments = (order.payments || [])
-                  .filter(p => p && p.type === "POST_FULFILLMENT" && p.params && p.time)
-                  .map(p => ({
-                      installmentId: p.id || '',
-                      amount: p.params.amount || '',
-                      currency: p.params.currency || 'INR',
-                      status: p.status || 'UNKNOWN',
-                      dueDate: p.time?.range?.end || '',
-                      startDate: p.time?.range?.start || ''
-                  }));
+// Extract payment schedules (only POST_FULFILLMENT types)
+const installments = allPayments
+    .filter(p => p.type === "POST_FULFILLMENT" && p.time?.label === "INSTALLMENT")
+    .map(p => ({
+        installmentNumber: p.id,
+        amount: p.params?.amount || '',
+        currency: p.params?.currency || 'INR',
+        status: p.status || 'UNKNOWN',
+        dueDate: p.time?.range?.end || '',
+        startDate: p.time?.range?.start || '',
+        label: p.time?.label || ''
+    }));
 
-              // Safely extract fulfillment status
-              const fulfillmentStatus = order.fulfillments?.[0]?.state?.descriptor?.code || 'UNKNOWN';
+// Extract payment terms from settlement details
+const settlementTerms = allPayments
+    .find(p => p.type === "ON_ORDER")
+    ?.tags?.find(t => t.descriptor?.code === "SETTLEMENT_TERMS")
+    ?.list || [];
 
-              // Safely extract documents
-              const documents = (order.documents || []).map(doc => ({
-                  type: doc?.descriptor?.code || '',
-                  name: doc?.descriptor?.name || '',
-                  description: doc?.descriptor?.short_desc || '',
-                  url: doc?.url || ''
-              }));
+const terms = {
+    settlement: {
+        window: settlementTerms.find(i => i.descriptor?.code === "SETTLEMENT_WINDOW")?.value || '',
+        basis: settlementTerms.find(i => i.descriptor?.code === "SETTLEMENT_BASIS")?.value || '',
+        amount: settlementTerms.find(i => i.descriptor?.code === "SETTLEMENT_AMOUNT")?.value || '',
+        arbitration: settlementTerms.find(i => i.descriptor?.code === "MANDATORY_ARBITRATION")?.value || '',
+        jurisdiction: settlementTerms.find(i => i.descriptor?.code === "COURT_JURISDICTION")?.value || ''
+    }
+};
 
-              return {
+                // Get installment schedule
+                // const installments = allPayments
+                //     .filter(p => p.type === "POST_FULFILLMENT")
+                //     .map(p => ({
+                //         installmentNumber: p.id,
+                //         amount: p.params?.amount || '',
+                //         currency: p.params?.currency || 'INR',
+                //         status: p.status || 'UNKNOWN',
+                //         dueDate: p.time?.range?.end || '',
+                //         startDate: p.time?.range?.start || ''
+                //     }));
+
+                // Extract breakdown
+                const breakdown = (order.quote?.breakup || []).reduce((acc, item) => {
+                    if (item?.title && item?.price) {
+                        acc[item.title.toLowerCase()] = {
+                            amount: item.price.value || '',
+                            currency: item.price.currency || 'INR'
+                        };
+                    }
+                    return acc;
+                }, {});
+
+                return {
                   transactionId: transaction.transactionId,
                   provider,
                   loanDetails,
                   charges,
+                  payments: {
+                      installments,   // Only includes POST_FULFILLMENT payments
+                      terms          // Only includes settlement terms
+                  },
                   breakdown,
-                  payments,
-                  fulfillmentStatus,
-                  documents,
+                  fulfillmentStatus: order.fulfillments?.[0]?.state?.descriptor?.code || 'UNKNOWN',
+                  documents: (order.documents || []).map(doc => ({
+                      type: doc?.descriptor?.code || '',
+                      name: doc?.descriptor?.name || '',
+                      description: doc?.descriptor?.short_desc || '',
+                      url: doc?.url || ''
+                  })),
                   lastUpdated: loan.Response.context?.timestamp || new Date().toISOString()
               };
-          })
-      );
+            })
+        );
 
-      const finalLoans = updatedLoans.filter(loan => loan !== null);
+        const finalLoans = updatedLoans.filter(loan => loan !== null);
 
-      res.status(200).json({
-          message: "Loan status check completed",
-          totalLoans: finalLoans.length,
-          loans: finalLoans
-      });
+        res.status(200).json({
+            message: "Loan status check completed",
+            totalLoans: finalLoans.length,
+            loans: finalLoans
+        });
 
-  } catch (error) {
-      console.error("Loan status check failed:", error);
-      res.status(500).json({ error: error.message });
-  }
+    } catch (error) {
+        console.error("Loan status check failed:", error);
+        res.status(500).json({ error: error.message });
+    }
 }
   static async checkDisbursalStatus(req, res) {
     try {
