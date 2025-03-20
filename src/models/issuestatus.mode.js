@@ -23,12 +23,32 @@ const issueStatusSchema = new mongoose.Schema({
         timestamp: Date
     },
     resolution: {
-        payload: Object,
-        timestamp: Date
+        shortDesc: String,
+        longDesc: String,
+        actionTriggered: String,
+        refundAmount: String
     },
     responseDetails: {
         payload: Object,
-        timestamp: Date
+        timestamp: Date,
+        respondentActions: [{
+            respondentAction: String,
+            shortDesc: String,
+            updatedAt: Date,
+            updatedBy: {
+                org: {
+                    name: String
+                },
+                contact: {
+                    phone: String,
+                    email: String
+                },
+                person: {
+                    name: String
+                }
+            },
+            cascadedLevel: Number
+        }]
     }
 }, {
     timestamps: true

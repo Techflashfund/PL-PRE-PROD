@@ -47,7 +47,8 @@ const issueSchema = new mongoose.Schema({
     resolution: {
         shortDesc: String,
         longDesc: String,
-        actionTriggered: String
+        actionTriggered: String,
+        refundAmount: String
     },
     respondentActions: [{
         respondentAction: String,
@@ -83,6 +84,7 @@ const issueSchema = new mongoose.Schema({
                 }
             },
             resolutionSupport: {
+                chatLink: String,
                 contact: {
                     phone: String,
                     email: String

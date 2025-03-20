@@ -339,6 +339,14 @@ class IssueController {
                 cascadedLevel: action.cascaded_level
             })) || [];
     
+            // Extract resolution
+            const resolution = message.issue.resolution ? {
+                shortDesc: message.issue.resolution.short_desc,
+                longDesc: message.issue.resolution.long_desc,
+                actionTriggered: message.issue.resolution.action_triggered,
+                refundAmount: message.issue.resolution.refund_amount
+            } : null;
+    
             // Extract resolution provider
             const resolutionProvider = message.issue.resolution_provider ? {
                 respondentInfo: {
@@ -375,40 +383,41 @@ class IssueController {
                 }
             } : null;
     
-            // Extract resolution
-            const resolution = message.issue.resolution ? {
-                shortDesc: message.issue.resolution.short_desc,
-                longDesc: message.issue.resolution.long_desc,
-                actionTriggered: message.issue.resolution.action_triggered
-  
-            } : null;
+            const updateData = {
+                'responseDetails.payload': req.body,
+                'responseDetails.timestamp': new Date(context.timestamp),
+                'responseDetails.respondentActions': respondentActions,
+                status: 'COMPLETED'
+            };
+    
+            if (resolution) {
+                updateData.resolution = resolution;
+            }
     
             // Update IssueStatus
             await IssueStatus.findOneAndUpdate(
                 { issueId: message.issue.id },
-                {
-                    $set: {
-                        'responseDetails.payload': req.body,
-                        'responseDetails.timestamp': new Date(context.timestamp),
-                        'responseDetails.respondentActions': respondentActions,
-                        status: 'COMPLETED'
-                    }
-                }
+                { $set: updateData }
             );
     
             // Update main Issue document
+            const issueUpdateData = {
+                status: message.issue.issue_actions?.respondent_actions?.slice(-1)[0]?.respondent_action || 'PROCESSING',
+                respondentActions,
+                updatedAt: new Date(message.issue.updated_at),
+                'responseDetails.issueStatus': req.body
+            };
+    
+            if (resolution) {
+                issueUpdateData.resolution = resolution;
+            }
+            if (resolutionProvider) {
+                issueUpdateData.resolutionProvider = resolutionProvider;
+            }
+    
             await Issue.findOneAndUpdate(
                 { issueId: message.issue.id },
-                {
-                    $set: {
-                        status: message.issue.issue_actions?.respondent_actions?.slice(-1)[0]?.respondent_action || 'PROCESSING',
-                        respondentActions,
-                        resolution,
-                        resolutionProvider,
-                        updatedAt: new Date(message.issue.updated_at),
-                        'responseDetails.issueStatus': req.body
-                    }
-                }
+                { $set: issueUpdateData }
             );
     
             res.status(200).json({
@@ -417,7 +426,10 @@ class IssueController {
     
         } catch (error) {
             console.error('Issue status update failed:', error);
-            res.status(500).json({ error: error.message });
+            res.status(500).json({ 
+                error: error.message,
+                stack: error.stack 
+            });
         }
     }
     static async completeIssue(req, res) {
