@@ -450,25 +450,25 @@ class StatusController {
         }
 
         // Send status requests for valid transactions
-        await Promise.all(
-            validTransactions.map(async ({ transaction, loan }) => {
-                const statusPayload = {
-                    context: {
-                        ...loan.Response.context,
-                        action: "status",
-                        message_id: uuidv4(),
-                        timestamp: new Date().toISOString()
-                    },
-                    message: {
-                        ref_id: transaction.transactionId
-                    }
-                };
-                await statusRequest(statusPayload);
-            })
-        );
+        // await Promise.all(
+        //     validTransactions.map(async ({ transaction, loan }) => {
+        //         const statusPayload = {
+        //             context: {
+        //                 ...loan.Response.context,
+        //                 action: "status",
+        //                 message_id: uuidv4(),
+        //                 timestamp: new Date().toISOString()
+        //             },
+        //             message: {
+        //                 ref_id: transaction.transactionId
+        //             }
+        //         };
+        //         await statusRequest(statusPayload);
+        //     })
+        // );
 
-        // Wait for responses
-        await new Promise((resolve) => setTimeout(resolve, 5000));
+        // // Wait for responses
+        // await new Promise((resolve) => setTimeout(resolve, 5000));
 
         // Fetch updated loan details
         const updatedLoans = await Promise.all(
