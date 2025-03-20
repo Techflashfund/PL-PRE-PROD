@@ -6,5 +6,6 @@ router.post('/create', IssueController.createIssue);
 router.post('/complete', IssueController.completeIssue);
 router.post('/', IssueController.onIssue);
 router.get('/status/:issueId', IssueController.checkIssueStatusById);
+router.get('/details/:issueId', IssueController.getIssueDetails);
 
 module.exports = router;

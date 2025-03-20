@@ -267,6 +267,46 @@ class IssueController {
             console.error('Issue status check failed:', error);
             res.status(500).json({ error: error.message });
         }
+    }static async getIssueDetails(req, res) {
+        try {
+            const { issueId } = req.params;
+    
+            const issue = await Issue.findOne({ issueId });
+            if (!issue) {
+                return res.status(404).json({ 
+                    success: false,
+                    message: 'Issue not found' 
+                });
+            }
+    
+            // Format response
+            const response = {
+                issueId: issue.issueId,
+                transactionId: issue.transactionId,
+                category: issue.category,
+                sub_category: issue.sub_category,
+                status: issue.status,
+                complainant: issue.complainantInfo,
+                description: issue.description,
+                createdAt: issue.createdAt,
+                updatedAt: issue.updatedAt,
+                resolution: issue.resolution || null,
+                respondentActions: issue.respondentActions || [],
+                resolutionProvider: issue.resolutionProvider || null
+            };
+    
+            res.status(200).json({
+                success: true,
+                data: response
+            });
+    
+        } catch (error) {
+            console.error('Get issue details failed:', error);
+            res.status(500).json({ 
+                success: false,
+                error: error.message 
+            });
+        }
     }
     static async onIssueStatus(req, res) {
         try {
