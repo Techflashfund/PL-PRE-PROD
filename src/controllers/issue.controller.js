@@ -379,8 +379,8 @@ class IssueController {
             const resolution = message.issue.resolution ? {
                 shortDesc: message.issue.resolution.short_desc,
                 longDesc: message.issue.resolution.long_desc,
-                actionTriggered: message.issue.resolution.action_triggered,
-                refundAmount: message.issue.resolution.refund_amount
+                actionTriggered: message.issue.resolution.action_triggered
+  
             } : null;
     
             // Update IssueStatus

@@ -22,6 +22,10 @@ const issueStatusSchema = new mongoose.Schema({
         payload: Object,
         timestamp: Date
     },
+    resolution: {
+        payload: Object,
+        timestamp: Date
+    },
     responseDetails: {
         payload: Object,
         timestamp: Date
