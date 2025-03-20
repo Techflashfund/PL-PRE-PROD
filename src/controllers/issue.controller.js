@@ -348,40 +348,41 @@ class IssueController {
             } : null;
     
             // Extract resolution provider
-            const resolutionProvider = message.issue.resolution_provider ? {
-                respondentInfo: {
-                    type: message.issue.resolution_provider.respondent_info.type,
-                    organization: {
-                        org: {
-                            name: message.issue.resolution_provider.respondent_info.organization.org.name
-                        },
-                        contact: {
-                            phone: message.issue.resolution_provider.respondent_info.organization.contact.phone,
-                            email: message.issue.resolution_provider.respondent_info.organization.contact.email
-                        },
-                        person: {
-                            name: message.issue.resolution_provider.respondent_info.organization.person.name
-                        }
-                    },
-                    resolutionSupport: {
-                        chatLink: message.issue.resolution_provider.respondent_info.resolution_support.chat_link,
-                        contact: {
-                            phone: message.issue.resolution_provider.respondent_info.resolution_support.contact.phone,
-                            email: message.issue.resolution_provider.respondent_info.resolution_support.contact.email
-                        },
-                        gros: message.issue.resolution_provider.respondent_info.resolution_support.gros.map(gro => ({
-                            person: {
-                                name: gro.person.name
-                            },
-                            contact: {
-                                phone: gro.contact.phone,
-                                email: gro.contact.email
-                            },
-                            groType: gro.gro_type
-                        }))
-                    }
-                }
-            } : null;
+           // Extract resolution provider
+const resolutionProvider = message.issue.resolution_provider ? {
+    respondentInfo: {
+        type: message.issue.resolution_provider.respondent_info.type,
+        organization: {
+            org: {
+                name: message.issue.resolution_provider.respondent_info.organization.org.name
+            },
+            contact: {
+                phone: message.issue.resolution_provider.respondent_info.organization.contact.phone,
+                email: message.issue.resolution_provider.respondent_info.organization.contact.email
+            },
+            person: {
+                name: message.issue.resolution_provider.respondent_info.organization.person.name
+            }
+        },
+        resolutionSupport: {
+            chatLink: message.issue.resolution_provider.respondent_info.resolution_support.chat_link,
+            contact: {
+                phone: message.issue.resolution_provider.respondent_info.resolution_support.contact.phone,
+                email: message.issue.resolution_provider.respondent_info.resolution_support.contact.email
+            },
+            gros: message.issue.resolution_provider.respondent_info.resolution_support.gros.map(gro => ({
+                person: {
+                    name: gro.person.name
+                },
+                contact: {
+                    phone: gro.contact.phone,
+                    email: gro.contact.email
+                },
+                groType: gro.gro_type
+            }))
+        }
+    }
+} : null;
     
             const updateData = {
                 'responseDetails.payload': req.body,
