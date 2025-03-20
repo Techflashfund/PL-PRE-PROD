@@ -21,7 +21,9 @@ class IssueController {
                 phone, 
                 email, 
                 shortDesc, 
-                longDesc 
+                longDesc,
+                category,
+                sub_category
             } = req.body;
 
             const loan = await DisbursedLoan.findOne({ transactionId });
@@ -42,7 +44,8 @@ class IssueController {
             
             
             const issuePayload =await IssueRequestUtils.createIssuePayload(loanress ||  selectresss, {
-                name, phone, email, shortDesc, longDesc,transactionId
+                name, phone, email, shortDesc, longDesc,transactionId,category,
+                sub_category
             });
 
             const issueResponse = await IssueService.submitIssue(issuePayload);
@@ -50,6 +53,8 @@ class IssueController {
             await Issue.create({
                 transactionId,
                 issueId: issuePayload.message.issue.id,
+                category,
+                sub_category,
                 complainantInfo: {
                     name,
                     phone,
@@ -57,7 +62,12 @@ class IssueController {
                 },
                 description: {
                     shortDesc,
-                    longDesc
+                    longDesc,
+                    additional_desc: {
+                        url: "",
+                        content_type: "text/plain"
+                    },
+                    images: []
                 },
                 requestDetails: {
                     payload: issuePayload,
@@ -66,8 +76,10 @@ class IssueController {
                 responseDetails: {
                     payload: issueResponse,
                     timestamp: new Date()
-                }
+                },
+                status: 'OPEN'
             });
+    
 
             res.status(200).json({
                 message: 'Issue created successfully',
@@ -85,65 +97,95 @@ class IssueController {
             const { context, message } = req.body;
             
             // Save request to temp data
-            const tempData = await TempData.create({
+            await TempData.create({
                 transactionId: context.transaction_id,
                 messageId: context.message_id,
                 responseData: req.body
             });
-            if(tempData){
-                console.log('Temp data saved successfully');
-            }
-
+    
             // Find and update message ID status
-            const issueMessageId = await IssueMessageIds.findOne({
-                issueId: message.issue.id
-            });
-
-            if (issueMessageId) {
-                await IssueMessageIds.findOneAndUpdate(
-                    { issueId: message.issue.id },
-                    { status: 'yes' }
-                );
-            }
-
-            const issueId = message.issue.id;
-            const transactionId= context.transaction_id
+            await IssueMessageIds.findOneAndUpdate(
+                { issueId: message.issue.id },
+                { status: 'yes' }
+            );
+    
+            // Extract respondent actions
+            const respondentActions = message.issue.issue_actions?.respondent_actions?.map(action => ({
+                respondentAction: action.respondent_action,
+                shortDesc: action.short_desc,
+                updatedAt: new Date(action.updated_at),
+                updatedBy: {
+                    org: {
+                        name: action.updated_by?.org?.name
+                    },
+                    contact: {
+                        phone: action.updated_by?.contact?.phone,
+                        email: action.updated_by?.contact?.email
+                    },
+                    person: {
+                        name: action.updated_by?.person?.name
+                    }
+                },
+                cascadedLevel: action.cascaded_level
+            })) || [];
+    
+            // Update Issue document
             await Issue.findOneAndUpdate(
                 { issueId: message.issue.id },
                 {
                     $set: {
                         status: message.issue.issue_actions?.respondent_actions?.[0]?.respondent_action || 'PROCESSING',
+                        respondentActions: respondentActions,
+                        'responseDetails.payload': req.body,
+                        'responseDetails.timestamp': new Date(message.issue.updated_at),
                         'responseDetails.respondentActions': message.issue.issue_actions?.respondent_actions,
-                        'responseDetails.updatedAt': message.issue.updated_at,
-                        response:req.body,
-                        updatedAt: new Date()
+                        response: req.body,
+                        updatedAt: new Date(message.issue.updated_at)
                     }
-                }
+                },
+                { new: true }
             );
-
-
-            const issue = await Issue.findOne({ 
-                transactionId,
-                issueId 
+    
+            res.status(200).json({
+                message: 'Issue response processed successfully'
             });
+    
+        } catch (error) {
+            console.error('Issue response processing failed:', error);
+            res.status(500).json({ error: error.message });
+        }
+    }
+    static async checkIssueStatusById(req, res) {
+        try {
+            const { issueId } = req.params;
+            const issue = await Issue.findOne({ issueId });
+            
             if (!issue) {
                 return res.status(404).json({ error: 'Issue not found' });
             }
+    
             const messageId = uuidv4();
             const statusPayload = {
                 context: {
-                    ...issue.requestDetails.payload.context,
+                    domain: "ONDC:FIS12",
                     action: "issue_status",
                     message_id: messageId,
-                    timestamp: new Date().toISOString()
+                    timestamp: new Date().toISOString(),
+                    version: "2.0.0",
+                    bap_id: issue.requestDetails.payload.context.bap_id,
+                    bap_uri: issue.requestDetails.payload.context.bap_uri,
+                    bpp_id: issue.requestDetails.payload.context.bpp_id,
+                    bpp_uri: issue.requestDetails.payload.context.bpp_uri,
+                    transaction_id: issue.transactionId
                 },
                 message: {
                     issue_id: issueId
                 }
             };
-
+    
+            // Create issue status record
             await IssueStatus.create({
-                transactionId,
+                transactionId: issue.transactionId,
                 messageId,
                 issueId,
                 status: 'PENDING',
@@ -152,10 +194,11 @@ class IssueController {
                     timestamp: new Date()
                 }
             });
-
+    
+            // Send status request
             const statusResponse = await IssueService.checkIssueStatus(statusPayload);
-
-            // Update with response
+    
+            // Update issue status record
             await IssueStatus.findOneAndUpdate(
                 { messageId },
                 {
@@ -168,13 +211,14 @@ class IssueController {
                     }
                 }
             );
+    
             res.status(200).json({
-                message: 'Issue status request processed',
+                message: 'Issue status check completed',
                 response: statusResponse
             });
-
+    
         } catch (error) {
-            console.error('Issue response processing failed:', error);
+            console.error('Issue status check failed:', error);
             res.status(500).json({ error: error.message });
         }
     }
@@ -235,13 +279,78 @@ class IssueController {
                 responseData: req.body
             });
     
-            // Update Issue Status
+            // Extract respondent actions
+            const respondentActions = message.issue.issue_actions?.respondent_actions?.map(action => ({
+                respondentAction: action.respondent_action,
+                shortDesc: action.short_desc,
+                updatedAt: new Date(action.updated_at),
+                updatedBy: {
+                    org: {
+                        name: action.updated_by?.org?.name
+                    },
+                    contact: {
+                        phone: action.updated_by?.contact?.phone,
+                        email: action.updated_by?.contact?.email
+                    },
+                    person: {
+                        name: action.updated_by?.person?.name
+                    }
+                },
+                cascadedLevel: action.cascaded_level
+            })) || [];
+    
+            // Extract resolution provider
+            const resolutionProvider = message.issue.resolution_provider ? {
+                respondentInfo: {
+                    type: message.issue.resolution_provider.respondent_info.type,
+                    organization: {
+                        org: {
+                            name: message.issue.resolution_provider.respondent_info.organization.org.name
+                        },
+                        contact: {
+                            phone: message.issue.resolution_provider.respondent_info.organization.contact.phone,
+                            email: message.issue.resolution_provider.respondent_info.organization.contact.email
+                        },
+                        person: {
+                            name: message.issue.resolution_provider.respondent_info.organization.person.name
+                        }
+                    },
+                    resolutionSupport: {
+                        chatLink: message.issue.resolution_provider.respondent_info.resolution_support.chat_link,
+                        contact: {
+                            phone: message.issue.resolution_provider.respondent_info.resolution_support.contact.phone,
+                            email: message.issue.resolution_provider.respondent_info.resolution_support.contact.email
+                        },
+                        gros: message.issue.resolution_provider.respondent_info.resolution_support.gros.map(gro => ({
+                            person: {
+                                name: gro.person.name
+                            },
+                            contact: {
+                                phone: gro.contact.phone,
+                                email: gro.contact.email
+                            },
+                            groType: gro.gro_type
+                        }))
+                    }
+                }
+            } : null;
+    
+            // Extract resolution
+            const resolution = message.issue.resolution ? {
+                shortDesc: message.issue.resolution.short_desc,
+                longDesc: message.issue.resolution.long_desc,
+                actionTriggered: message.issue.resolution.action_triggered,
+                refundAmount: message.issue.resolution.refund_amount
+            } : null;
+    
+            // Update IssueStatus
             await IssueStatus.findOneAndUpdate(
                 { issueId: message.issue.id },
                 {
                     $set: {
                         'responseDetails.payload': req.body,
-                        'responseDetails.timestamp': new Date(),
+                        'responseDetails.timestamp': new Date(context.timestamp),
+                        'responseDetails.respondentActions': respondentActions,
                         status: 'COMPLETED'
                     }
                 }
@@ -253,10 +362,11 @@ class IssueController {
                 {
                     $set: {
                         status: message.issue.issue_actions?.respondent_actions?.slice(-1)[0]?.respondent_action || 'PROCESSING',
-                        resolution: message.issue.resolution,
-                        respondentActions: message.issue.issue_actions?.respondent_actions,
-                        resolutionProvider: message.issue.resolution_provider,
-                        updatedAt: message.issue.updated_at
+                        respondentActions,
+                        resolution,
+                        resolutionProvider,
+                        updatedAt: new Date(message.issue.updated_at),
+                        'responseDetails.issueStatus': req.body
                     }
                 }
             );
