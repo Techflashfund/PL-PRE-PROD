@@ -219,38 +219,76 @@ class UpdateController{
                 //     }
                 // );
             }
-            if (fulfillmentState === 'COMPLETE') {
-                await CompletedLoan.findOneAndUpdate(
-                    { transactionId: context.transaction_id },
-                    {
-                        $set: {
-                            providerId: order.provider.id,
-                            loanDetails: {
-                                amount: order.items[0].price.value,
-                                currency: order.items[0].price.currency,
-                                term: order.items[0].tags[0].list.find(
-                                    (i) => i.descriptor.code === "TERM"
-                                )?.value,
-                                interestRate: order.items[0].tags[0].list.find(
-                                    (i) => i.descriptor.code === "INTEREST_RATE"
-                                )?.value
-                            },
-                            Response: req.body,
-                            completionDate: new Date()
-                        }
-                    },
-                    { 
-                        new: true, 
-                        upsert: true,
-                        setDefaultsOnInsert: true
-                    }
-                );
+            if (fulfillmentState === 'COMPLETED') {
+                // First find the disbursed loan
+                const disbursedLoan = await DisbursedLoan.findOne({ 
+                    transactionId: context.transaction_id 
+                });
             
-                await Transaction.findOneAndUpdate(
-                    { transactionId: context.transaction_id },
-                    { status: 'LOAN_COMPLETED' },
-                    { new: true }
-                );
+                if (disbursedLoan) {
+                    // Create completed loan record
+                    await CompletedLoan.findOneAndUpdate(
+                        { transactionId: context.transaction_id },
+                        {
+                            $set: {
+                                providerId: order.provider.id,
+                                loanDetails: disbursedLoan.loanDetails,
+                                breakdown: disbursedLoan.breakdown,
+                                customerDetails: disbursedLoan.customerDetails,
+                                paymentSchedule: disbursedLoan.paymentSchedule,
+                                documents: disbursedLoan.documents,
+                                Response: req.body,
+                                completionDate: new Date(),
+                                disbursedLoanDetails: disbursedLoan.Response // Store original disbursement details
+                            }
+                        },
+                        { 
+                            new: true, 
+                            upsert: true,
+                            setDefaultsOnInsert: true
+                        }
+                    );
+            
+                    // Delete from disbursed loans
+                    await DisbursedLoan.deleteOne({ 
+                        transactionId: context.transaction_id 
+                    });
+            
+                    // Update transaction status
+                    await Transaction.findOneAndUpdate(
+                        { transactionId: context.transaction_id },
+                        { status: 'LOAN_COMPLETED' },
+                        { new: true }
+                    );
+                } else {
+                    console.warn(`No disbursed loan found for transaction ${context.transaction_id}`);
+                    // Still create completed loan record with available data
+                    await CompletedLoan.findOneAndUpdate(
+                        { transactionId: context.transaction_id },
+                        {
+                            $set: {
+                                providerId: order.provider.id,
+                                loanDetails: {
+                                    amount: order.items[0].price.value,
+                                    currency: order.items[0].price.currency,
+                                    term: order.items[0].tags[0].list.find(
+                                        (i) => i.descriptor.code === "TERM"
+                                    )?.value,
+                                    interestRate: order.items[0].tags[0].list.find(
+                                        (i) => i.descriptor.code === "INTEREST_RATE"
+                                    )?.value
+                                },
+                                Response: req.body,
+                                completionDate: new Date()
+                            }
+                        },
+                        { 
+                            new: true, 
+                            upsert: true,
+                            setDefaultsOnInsert: true
+                        }
+                    );
+                }
             }
            
             // if (fulfillmentState === 'DISBURSED') {
