@@ -412,6 +412,117 @@ class StatusController {
       res.status(500).json({ error: error.message });
     }
   }
+  static async checkCompletedLoanStatus(req, res) {
+    try {
+        const { userId } = req.body;
+
+        // Find all completed loan transactions for the user
+        const transactions = await Transaction.find({ 
+            user: userId,
+            status: 'LOAN_COMPLETED'
+        });
+
+        if (!transactions.length) {
+            return res.status(404).json({
+                message: "No completed loans found for this user"
+            });
+        }
+
+        // Get completed loan details
+        const completedLoans = await Promise.all(
+            transactions.map(async (transaction) => {
+                const loan = await CompletedLoan.findOne({
+                    transactionId: transaction.transactionId
+                });
+
+                if (!loan?.Response?.message?.order) return null;
+
+                const order = loan.Response.message.order;
+
+                // Extract provider details
+                const provider = {
+                    id: order.provider?.id || '',
+                    name: order.provider?.descriptor?.name || '',
+                    description: order.provider?.descriptor?.short_desc || '',
+                    logo: order.provider?.descriptor?.images?.[0]?.url || '',
+                    contact: {
+                        gro: {
+                            name: order.provider?.tags?.[0]?.list?.find(i => i.descriptor?.code === "GRO_NAME")?.value || '',
+                            email: order.provider?.tags?.[0]?.list?.find(i => i.descriptor?.code === "GRO_EMAIL")?.value || '',
+                            phone: order.provider?.tags?.[0]?.list?.find(i => i.descriptor?.code === "GRO_CONTACT_NUMBER")?.value || ''
+                        },
+                        support: {
+                            link: order.provider?.tags?.[0]?.list?.find(i => i.descriptor?.code === "CUSTOMER_SUPPORT_LINK")?.value || '',
+                            phone: order.provider?.tags?.[0]?.list?.find(i => i.descriptor?.code === "CUSTOMER_SUPPORT_CONTACT_NUMBER")?.value || '',
+                            email: order.provider?.tags?.[0]?.list?.find(i => i.descriptor?.code === "CUSTOMER_SUPPORT_EMAIL")?.value || ''
+                        }
+                    }
+                };
+
+                // Extract payment schedule
+                const payments = order.payments?.filter(p => p.type === "POST_FULFILLMENT")
+                    .map(p => ({
+                        id: p.id,
+                        amount: p.params?.amount || '',
+                        currency: p.params?.currency || 'INR',
+                        status: p.status || '',
+                        type: p.time?.label || '',
+                        startDate: p.time?.range?.start || '',
+                        endDate: p.time?.range?.end || ''
+                    })) || [];
+
+                // Extract loan details from items
+                const loanInfo = order.items?.[0]?.tags?.[0]?.list || [];
+                const enhancedLoanDetails = {
+                    ...loan.loanDetails,
+                    interestRateType: loanInfo.find(i => i.descriptor?.code === "INTEREST_RATE_TYPE")?.value || '',
+                    applicationFee: loanInfo.find(i => i.descriptor?.code === "APPLICATION_FEE")?.value || '',
+                    foreclosureFee: loanInfo.find(i => i.descriptor?.code === "FORECLOSURE_FEE")?.value || '',
+                    delayPenalty: loanInfo.find(i => i.descriptor?.code === "DELAY_PENALTY_FEE")?.value || ''
+                };
+
+                // Extract quote breakdown
+                const breakdown = (order.quote?.breakup || []).reduce((acc, item) => {
+                    if (item?.title && item?.price) {
+                        acc[item.title.toLowerCase()] = {
+                            amount: item.price.value || '',
+                            currency: item.price.currency || 'INR'
+                        };
+                    }
+                    return acc;
+                }, {});
+
+                return {
+                    transactionId: transaction.transactionId,
+                    provider,
+                    loanDetails: enhancedLoanDetails,
+                    paymentSchedule: payments,
+                    breakdown,
+                    documents: (order.documents || []).map(doc => ({
+                        type: doc?.descriptor?.code || '',
+                        name: doc?.descriptor?.name || '',
+                        description: doc?.descriptor?.short_desc || '',
+                        url: doc?.url || ''
+                    })),
+                    completionDate: loan.completionDate,
+                    lastUpdated: loan.updatedAt
+                };
+            })
+        );
+
+        const finalLoans = completedLoans.filter(loan => loan !== null);
+
+        res.status(200).json({
+            message: "Completed loan status check completed",
+            totalLoans: finalLoans.length,
+            loans: finalLoans
+        });
+
+    } catch (error) {
+        console.error("Completed loan status check failed:", error);
+        res.status(500).json({ error: error.message });
+    }
+}
   static async checkLoanStatus(req, res) {
     try {
         const { userId } = req.body;
