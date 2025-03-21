@@ -319,106 +319,15 @@ class IssueController {
                 responseData: req.body
             });
     
-            // Extract respondent actions
-            const respondentActions = message.issue.issue_actions?.respondent_actions?.map(action => ({
-                respondentAction: action.respondent_action,
-                shortDesc: action.short_desc,
-                updatedAt: new Date(action.updated_at),
-                updatedBy: {
-                    org: {
-                        name: action.updated_by?.org?.name
-                    },
-                    contact: {
-                        phone: action.updated_by?.contact?.phone,
-                        email: action.updated_by?.contact?.email
-                    },
-                    person: {
-                        name: action.updated_by?.person?.name
-                    }
-                },
-                cascadedLevel: action.cascaded_level
-            })) || [];
-    
-            // Extract resolution
-            const resolution = message.issue.resolution ? {
-                shortDesc: message.issue.resolution.short_desc,
-                longDesc: message.issue.resolution.long_desc,
-                actionTriggered: message.issue.resolution.action_triggered,
-                refundAmount: message.issue.resolution.refund_amount
-            } : null;
-    
-            // Extract resolution provider
-           // Extract resolution provider
-const resolutionProvider = message.issue.resolution_provider ? {
-    respondentInfo: {
-        type: message.issue.resolution_provider.respondent_info.type,
-        organization: {
-            org: {
-                name: message.issue.resolution_provider.respondent_info.organization.org.name
-            },
-            contact: {
-                phone: message.issue.resolution_provider.respondent_info.organization.contact.phone,
-                email: message.issue.resolution_provider.respondent_info.organization.contact.email
-            },
-            person: {
-                name: message.issue.resolution_provider.respondent_info.organization.person.name
-            }
-        },
-        resolutionSupport: {
-            chatLink: message.issue.resolution_provider.respondent_info.resolution_support.chat_link,
-            contact: {
-                phone: message.issue.resolution_provider.respondent_info.resolution_support.contact.phone,
-                email: message.issue.resolution_provider.respondent_info.resolution_support.contact.email
-            },
-            gros: message.issue.resolution_provider.respondent_info.resolution_support.gros.map(gro => ({
-                person: {
-                    name: gro.person.name
-                },
-                contact: {
-                    phone: gro.contact.phone,
-                    email: gro.contact.email
-                },
-                groType: gro.gro_type
-            }))
-        }
-    }
-} : null;
-    
-            const updateData = {
-                'responseDetails.payload': req.body,
-                'responseDetails.timestamp': new Date(context.timestamp),
-                'responseDetails.respondentActions': respondentActions,
-                status: 'COMPLETED'
-            };
-    
-            if (resolution) {
-                updateData.resolution = resolution;
-            }
-    
-            // Update IssueStatus
-            await IssueStatus.findOneAndUpdate(
-                { issueId: message.issue.id },
-                { $set: updateData }
-            );
-    
-            // Update main Issue document
-            const issueUpdateData = {
-                status: message.issue.issue_actions?.respondent_actions?.slice(-1)[0]?.respondent_action || 'PROCESSING',
-                respondentActions,
-                updatedAt: new Date(message.issue.updated_at),
-                'responseDetails.issueStatus': req.body
-            };
-    
-            if (resolution) {
-                issueUpdateData.resolution = resolution;
-            }
-            if (resolutionProvider) {
-                issueUpdateData.resolutionProvider = resolutionProvider;
-            }
-    
+            // Update Issue document with just the response
             await Issue.findOneAndUpdate(
                 { issueId: message.issue.id },
-                { $set: issueUpdateData }
+                {
+                    $set: {
+                        issueResponse: req.body,
+                        updatedAt: new Date(message.issue.updated_at)
+                    }
+                }
             );
     
             res.status(200).json({
@@ -428,8 +337,7 @@ const resolutionProvider = message.issue.resolution_provider ? {
         } catch (error) {
             console.error('Issue status update failed:', error);
             res.status(500).json({ 
-                error: error.message,
-                stack: error.stack 
+                error: error.message 
             });
         }
     }

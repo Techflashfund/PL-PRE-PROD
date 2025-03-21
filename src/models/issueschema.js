@@ -40,10 +40,7 @@ const issueSchema = new mongoose.Schema({
         payload: Object,
         timestamp: Date
     },
-    responseDetails: {
-        payload: Object,
-        timestamp: Date
-    },
+   
     resolution: {
         shortDesc: String,
         longDesc: String,
@@ -103,6 +100,7 @@ const issueSchema = new mongoose.Schema({
         }
     },
     response: Object,
+    issueResponse: Object,  
     issue_actions: {
         complainant_actions: [{
             complainant_action: String,
