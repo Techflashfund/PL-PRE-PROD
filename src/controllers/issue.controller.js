@@ -9,6 +9,7 @@ const Transaction=require('../models/transaction.model');
 const SelectThree=require('../models/selectThree.model')
 
 const TempData = require('../models/tempdata');
+const { response } = require('express');
 
 class IssueController {
     static async createIssue(req, res) {
@@ -282,17 +283,7 @@ class IssueController {
             // Format response
             const response = {
                 issueId: issue.issueId,
-                transactionId: issue.transactionId,
-                category: issue.category,
-                sub_category: issue.sub_category,
-                status: issue.status,
-                complainant: issue.complainantInfo,
-                description: issue.description,
-                createdAt: issue.createdAt,
-                updatedAt: issue.updatedAt,
-                resolution: issue.resolution || null,
-                respondentActions: issue.respondentActions || [],
-                resolutionProvider: issue.resolutionProvider || null
+                response: issue.issueResponse,
             };
     
             res.status(200).json({
