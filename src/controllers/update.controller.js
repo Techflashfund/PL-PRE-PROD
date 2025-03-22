@@ -291,60 +291,111 @@ class UpdateController{
                 }
             }
            
-            // if (fulfillmentState === 'DISBURSED') {
-            //     const loanInfo = message.order.items[0].tags[0].list;
-            //     const breakup = message.order.quote.breakup;
-            
-            //     await DisbursedLoan.create({
-            //         transactionId: context.transaction_id,
-            //         providerId: message.order.provider.id,
-            //         loanDetails: {
-            //             amount: message.order.items[0].price.value,
-            //             currency: message.order.items[0].price.currency,
-            //             interestRate: loanInfo.find(i => i.descriptor.code === 'INTEREST_RATE')?.value,
-            //             term: loanInfo.find(i => i.descriptor.code === 'TERM')?.value,
-            //             repaymentFrequency: loanInfo.find(i => i.descriptor.code === 'REPAYMENT_FREQUENCY')?.value,
-            //             totalInstallments: loanInfo.find(i => i.descriptor.code === 'NUMBER_OF_INSTALLMENTS_OF_REPAYMENT')?.value
-            //         },
-            //         breakdown: {
-            //             principal: breakup.find(b => b.title === 'PRINCIPAL')?.price.value,
-            //             interest: breakup.find(b => b.title === 'INTEREST')?.price.value,
-            //             processingFee: breakup.find(b => b.title === 'PROCESSING_FEE')?.price.value,
-            //             insuranceCharges: breakup.find(b => b.title === 'INSURANCE_CHARGES')?.price.value,
-            //             netDisbursedAmount: breakup.find(b => b.title === 'NET_DISBURSED_AMOUNT')?.price.value,
-            //             outstandingPrincipal: breakup.find(b => b.title === 'OUTSTANDING_PRINCIPAL')?.price.value,
-            //             outstandingInterest: breakup.find(b => b.title === 'OUTSTANDING_INTEREST')?.price.value
-            //         },
-            //         customerDetails: {
-            //             name: message.order.fulfillments[0].customer.person.name,
-            //             phone: message.order.fulfillments[0].customer.contact.phone,
-            //             email: message.order.fulfillments[0].customer.contact.email
-            //         },
-            //         paymentSchedule: message.order.payments
-            //             .filter(p => p.type === 'POST_FULFILLMENT')
-            //             .map(p => ({
-            //                 installmentId: p.id,
-            //                 amount: p.params.amount,
-            //                 currency: p.params.currency,
-            //                 startDate: p.time.range.start,
-            //                 endDate: p.time.range.end,
-            //                 status: p.status
-            //             })),
-            //         documents: message.order.documents.map(doc => ({
-            //             code: doc.descriptor.code,
-            //             name: doc.descriptor.name,
-            //             description: doc.descriptor.long_desc,
-            //             url: doc.url,
-            //             mimeType: doc.mime_type
-            //         })),
-            //         Response:req.body
-            //     });
-            
-            //     await Transaction.findOneAndUpdate(
-            //         { transactionId: context.transaction_id },
-            //         { status: 'LOAN_DISBURSED' }
-            //     );
-            // }
+            if (fulfillmentState === "DISBURSED") {
+                      try {
+                        const saved = await Transaction.findOneAndUpdate(
+                          { transactionId: context.transaction_id  },
+                          { status: "LOAN_DISBURSED" },
+                          { new: true }
+                        );
+                        console.log('saved', saved);
+                        
+                        const updatedLoan = await DisbursedLoan.findOneAndUpdate(
+                          { transactionId: context.transaction_id  },
+                          {
+                              $set: {
+                                  providerId: order.provider.id,
+                                  providerDetails: {
+                                      name: order.provider.descriptor.name,
+                                      shortDesc: order.provider.descriptor.short_desc,
+                                      longDesc: order.provider.descriptor.long_desc,
+                                      logo: order.provider.descriptor.images?.[0]?.url,
+                                      contact: {
+                                          groName: order.provider.tags?.[0]?.list?.find(i => i.descriptor.code === "GRO_NAME")?.value,
+                                          groEmail: order.provider.tags?.[0]?.list?.find(i => i.descriptor.code === "GRO_EMAIL")?.value,
+                                          groPhone: order.provider.tags?.[0]?.list?.find(i => i.descriptor.code === "GRO_CONTACT_NUMBER")?.value,
+                                          groDesignation: order.provider.tags?.[0]?.list?.find(i => i.descriptor.code === "GRO_DESIGNATION")?.value,
+                                          groAddress: order.provider.tags?.[0]?.list?.find(i => i.descriptor.code === "GRO_ADDRESS")?.value,
+                                          supportLink: order.provider.tags?.[0]?.list?.find(i => i.descriptor.code === "CUSTOMER_SUPPORT_LINK")?.value,
+                                          supportPhone: order.provider.tags?.[0]?.list?.find(i => i.descriptor.code === "CUSTOMER_SUPPORT_CONTACT_NUMBER")?.value,
+                                          supportEmail: order.provider.tags?.[0]?.list?.find(i => i.descriptor.code === "CUSTOMER_SUPPORT_EMAIL")?.value
+                                      },
+                                      lspInfo: {
+                                          name: order.provider.tags?.[1]?.list?.find(i => i.descriptor.code === "LSP_NAME")?.value,
+                                          email: order.provider.tags?.[1]?.list?.find(i => i.descriptor.code === "LSP_EMAIL")?.value,
+                                          phone: order.provider.tags?.[1]?.list?.find(i => i.descriptor.code === "LSP_CONTACT_NUMBER")?.value,
+                                          address: order.provider.tags?.[1]?.list?.find(i => i.descriptor.code === "LSP_ADDRESS")?.value
+                                      }
+                                  },
+                                  loanDetails: {
+                                      amount: order.items[0].price.value,
+                                      currency: order.items[0].price.currency,
+                                      term: order.items[0].tags[0].list.find(i => i.descriptor.code === "TERM")?.value,
+                                      interestRate: order.items[0].tags[0].list.find(i => i.descriptor.code === "INTEREST_RATE")?.value,
+                                      interestRateType: order.items[0].tags[0].list.find(i => i.descriptor.code === "INTEREST_RATE_TYPE")?.value,
+                                      applicationFee: order.items[0].tags[0].list.find(i => i.descriptor.code === "APPLICATION_FEE")?.value,
+                                      foreclosureFee: order.items[0].tags[0].list.find(i => i.descriptor.code === "FORECLOSURE_FEE")?.value,
+                                      conversionCharge: order.items[0].tags[0].list.find(i => i.descriptor.code === "INTEREST_RATE_CONVERSION_CHARGE")?.value,
+                                      delayPenalty: order.items[0].tags[0].list.find(i => i.descriptor.code === "DELAY_PENALTY_FEE")?.value,
+                                      otherPenalty: order.items[0].tags[0].list.find(i => i.descriptor.code === "OTHER_PENALTY_FEE")?.value,
+                                      annualPercentageRate: order.items[0].tags[0].list.find(i => i.descriptor.code === "ANNUAL_PERCENTAGE_RATE")?.value,
+                                      repaymentFrequency: order.items[0].tags[0].list.find(i => i.descriptor.code === "REPAYMENT_FREQUENCY")?.value,
+                                      numberOfInstallments: order.items[0].tags[0].list.find(i => i.descriptor.code === "NUMBER_OF_INSTALLMENTS_OF_REPAYMENT")?.value,
+                                      tncLink: order.items[0].tags[0].list.find(i => i.descriptor.code === "TNC_LINK")?.value,
+                                      coolOffPeriod: order.items[0].tags[0].list.find(i => i.descriptor.code === "COOL_OFF_PERIOD")?.value,
+                                      installmentAmount: order.items[0].tags[0].list.find(i => i.descriptor.code === "INSTALLMENT_AMOUNT")?.value
+                                  },
+                                  breakdown: order.quote.breakup.map(item => ({
+                                      title: item.title,
+                                      amount: item.price.value,
+                                      currency: item.price.currency
+                                  })),
+                                  customer: {
+                                      name: order.fulfillments[0].customer.person.name,
+                                      phone: order.fulfillments[0].customer.contact.phone,
+                                      email: order.fulfillments[0].customer.contact.email
+                                  },
+                                  paymentSchedule: order.payments
+                                      .filter(p => p.time?.label === "INSTALLMENT")
+                                      .map(p => ({
+                                          installmentId: p.id,
+                                          amount: p.params.amount,
+                                          currency: p.params.currency,
+                                          status: p.status,
+                                          startDate: p.time.range.start,
+                                          endDate: p.time.range.end
+                                      })),
+                                  documents: order.documents?.map(doc => ({
+                                      code: doc.descriptor.code,
+                                      name: doc.descriptor.name,
+                                      description: doc.descriptor.long_desc,
+                                      mimeType: doc.mime_type,
+                                      url: doc.url
+                                  })) || [],
+                                  status: "DISBURSED",
+                                  Response: req.body,
+                                  
+                                  updatedAt: new Date()
+                              }
+                          },
+                          {
+                              new: true,
+                              upsert: true,
+                              setDefaultsOnInsert: true
+                          }
+                        );
+              
+                        console.log(`DisbursedLoan updated for transaction: ${context.transaction_id }`);
+              
+                        // Return immediately after processing DISBURSED state
+                        return res.status(200).json({
+                          message: "Loan disbursement processed successfully",
+                        });
+                      } catch (error) {
+                        console.error("Error updating disbursed loan:", error);
+                        throw error;
+                      }
+                    }
 
             res.status(200).json({ message: 'Update processed successfully' });
 
