@@ -254,7 +254,16 @@ class IssueController {
     
             // Format the response
             const formattedIssues = issues.map(issue => {
-                if (!issue.issueResponse) {
+                if (issue.status === 'CLOSED') {
+                    // Return resolved status for closed issues
+                    return {
+                        transactionId: issue.transactionId,
+                        issueId: issue.issueId,
+                        status: 'RESOLVED',
+                        createdAt: issue.createdAt,
+                        updatedAt: issue.updatedAt
+                    };
+                } else if (!issue.issueResponse) {
                     // Basic response when no issueResponse exists
                     return {
                         transactionId: issue.transactionId,
