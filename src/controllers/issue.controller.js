@@ -24,9 +24,11 @@ class IssueController {
                 shortDesc, 
                 longDesc,
                 category,
-                sub_category
+                sub_category,
+                imageUrl
             } = req.body;
-
+            console.log('imageUrl',imageUrl);
+            
             const loan = await DisbursedLoan.findOne({ transactionId });
             let loanress=null
             if(loan){
