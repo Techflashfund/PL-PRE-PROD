@@ -227,41 +227,59 @@ class IssueController {
         try {
             const { userId } = req.body;
     
-            // Fetch all transactions for the user by ObjectId
+            // Fetch all transactions for the user
             const transactions = await Transaction.find({ user: userId });
     
             if (!transactions.length) {
                 return res.status(404).json({
-                    message: "No transactions found for this user",
+                    message: "No transactions found for this user"
                 });
             }
     
-            // Extract transactionIds (string IDs, not MongoDB _id)
+            // Extract transactionIds
             const transactionIds = transactions.map(transaction => transaction.transactionId);
     
-            // Find any issue statuses that match these transaction IDs
-            const issueStatuses = await IssueStatus.find({
+            // Find issues for these transactions
+            const issues = await Issue.find({
                 transactionId: { $in: transactionIds }
             });
     
-            // If no issue statuses found
-            if (!issueStatuses.length) {
+            if (!issues.length) {
                 return res.status(404).json({
-                    message: "No issue statuses found for this user's transactions",
+                    message: "No issues found for this user's transactions"
                 });
             }
     
-            // Format the response based on whether there's one or multiple results
-            let response;
-            if (issueStatuses.length === 1) {
-                response = issueStatuses[0];
-            } else {
-                response = issueStatuses;
-            }
+            // Format the response
+            const formattedIssues = issues.map(issue => {
+                if (!issue.issueResponse) {
+                    // Basic response when no issueResponse exists
+                    return {
+                        transactionId: issue.transactionId,
+                        issueId: issue.issueId,
+                        category: issue.category,
+                        sub_category: issue.sub_category,
+                        status: 'PROCESSING',
+                        createdAt: issue.createdAt,
+                        updatedAt: issue.updatedAt
+                    };
+                } else {
+                    // Full response when issueResponse exists
+                    const issueResponse = issue.issueResponse;
+                    return {
+                        transactionId: issue.transactionId,
+                        issueId: issue.issueId,
+                        status: 'RESPONDED',
+                        createdAt: issue.createdAt,
+                        response: issueResponse
+                    };
+                }
+            });
     
             res.status(200).json({
                 message: 'Issue status request processed',
-                response: response
+                totalIssues: formattedIssues.length,
+                issues: formattedIssues
             });
     
         } catch (error) {
