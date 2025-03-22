@@ -5,7 +5,8 @@ class IssueRequestUtils {
     static async createIssuePayload(disbursedLoan, issueDetails) {
         const messageId = uuidv4();
         const issueId = uuidv4();
-
+        console.log('image url', issueDetails.imageUrl);
+        
         await IssueMessageIds.create({
             transactionId: issueDetails.transactionId,
             messageId: messageId,
@@ -62,7 +63,7 @@ class IssueRequestUtils {
                             url: "",
                             content_type: "text/plain"
                         },
-                        images: []
+                        images: [issueDetails.imageUrl]
                     },
                     source: {
                         network_participant_id: `${disbursedLoan.context.bap_id}/ondc`,

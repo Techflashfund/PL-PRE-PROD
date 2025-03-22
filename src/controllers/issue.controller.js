@@ -47,7 +47,7 @@ class IssueController {
             
             
             const issuePayload =await IssueRequestUtils.createIssuePayload(loanress ||  selectresss, {
-                name, phone, email, shortDesc, longDesc,transactionId,category,
+                name, phone, email, shortDesc, longDesc,transactionId,category,imageUrl,
                 sub_category
             });
 
